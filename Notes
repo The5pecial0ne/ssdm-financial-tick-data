@@ -1,0 +1,7 @@
+kafka = mailbox where events arrive
+JobManager = Flink boss
+TaskManager = Flink worker
+
+ls
+docker compose up -d
+docker ps
