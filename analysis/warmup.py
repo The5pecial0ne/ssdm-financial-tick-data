@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 A38, A100 = 2 / (1 + 38), 2 / (1 + 100)
-key = pd.read_parquet("../data/answer-key-08-11-21.parquet")   # sorted by symbol, then window
+key = pd.read_parquet("../data/answer-key-v3-08-11-21.parquet")   # sorted by symbol, then window
 
 # A. How far has EMA100 climbed toward the price by each symbol's last window?
 last = key.groupby("ID").tail(1)
