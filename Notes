@@ -5,3 +5,28 @@ TaskManager = Flink worker
 ls
 docker compose up -d
 docker ps
+
+cd /Users/yashasvi/ssmProject/ssdm-financial-tick-data
+
+
+
+CONTAINER ID   IMAGE                 COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+38b89ec82dfa   flink:1.20            "/docker-entrypoint.…"   47 seconds ago   Up 45 seconds   6123/tcp, 8081/tcp                            taskmanager
+a0ae803605c8   apache/kafka:latest   "/__cacert_entrypoin…"   47 seconds ago   Up 46 seconds   0.0.0.0:9092->9092/tcp, [::]:9092->9092/tcp   kafka
+16c77c5e7f8f   flink:1.20            "/docker-entrypoint.…"   47 seconds ago   Up 46 seconds   0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp   jobmanager
+
+http://localhost:8081/#/overview
+
+pip list 
+**************
+Package         Version
+--------------- -----------
+confluent-kafka 2.15.1
+duckdb          1.5.6
+numpy           2.5.3
+pandas          3.0.6
+pip             26.2.1
+python-dateutil 2.9.0.post0
+six             1.17.0
+
+**************************
