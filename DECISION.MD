@@ -13,3 +13,6 @@
 -DEBS Sample data successfully loaded
 -Required columns identified:
 ID, Last , Trading time , Trading date.
+- Convert rows to JSON events, and publishes them to Kafka topic "trading-events".
+
+Successfully verified all 10 records through Kafka consumer.
