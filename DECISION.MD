@@ -16,3 +16,8 @@ ID, Last , Trading time , Trading date.
 - Convert rows to JSON events, and publishes them to Kafka topic "trading-events".
 
 Successfully verified all 10 records through Kafka consumer.
+
+17-10-2026
+ Kafka -> Flink integration completed.
+Producer events successfully consumed by Flink KafkaSource.
+Running job remains active and process incoming Kafka messages.
