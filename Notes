@@ -30,3 +30,44 @@ python-dateutil 2.9.0.post0
 six             1.17.0
 
 **************************
+
+source venv/bin/activate
+
+cd producer
+
+python3 producer.py
+
+open -a Docker 
+
+for listening logs 
+docker logs -f taskmanager
+
+docker exec kafka cat /opt/kafka/config/server.properties | grep listeners
+
+docker exec kafka /opt/kafka/bin/kafka-topics.sh \
+--list \
+--bootstrap-server kafka:9092
+
+docker compose down
+
+docker rm -f kafka
+
+docker compose up -d
+
+docker ps
+
+docker logs kafka | grep -i advertised
+
+docker logs kafka | grep -i listener
+
+docker exec kafka /opt/kafka/bin/kafka-topics.sh \
+--create \
+--topic trading-events \
+--bootstrap-server kafka:9092 \
+--partitions 4 \
+--replication-factor 1
+
+cd flink-job
+mvn clean package
+
+jar tf target/flink-job-1.0.jar | grep KafkaSource
