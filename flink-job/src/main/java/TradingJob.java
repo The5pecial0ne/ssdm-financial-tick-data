@@ -4,6 +4,7 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TradingJob {
 
@@ -27,8 +28,16 @@ public class TradingJob {
                         WatermarkStrategy.noWatermarks(),
                         "Kafka Source"
                 );
+				ObjectMapper mapper = new ObjectMapper();
 
-        stream.print();
+DataStream<TradeEvent> events =
+		stream.map(json ->{
+			return  mapper.readValue(json, TradeEvent.class);
+		});
+
+events.print();
+
+        //stream.print();
 
         env.execute("Trading Job");
     }
