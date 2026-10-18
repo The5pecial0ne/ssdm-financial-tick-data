@@ -4,6 +4,7 @@ public class TradeEvent {
     public Double price;
     public String tradingTime;
     public String tradingDate;
+    public Long eventTimestamp;
 
     public TradeEvent() {}
 
@@ -14,6 +15,7 @@ public class TradeEvent {
                 ", price=" + price +
                 ", tradingTime='" + tradingTime + '\'' +
                 ", tradingDate='" + tradingDate + '\'' +
+                ", eventTimestamp=" + eventTimestamp +
                 '}';
     }
 }

@@ -5,6 +5,12 @@ import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsIni
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.Duration;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
 
 public class TradingJob {
 
@@ -18,7 +24,7 @@ public class TradingJob {
                         .setBootstrapServers("kafka:9092")
                         .setTopics("trading-events")
                         .setGroupId("trading-job")
-                        .setStartingOffsets(OffsetsInitializer.earliest())
+                        .setStartingOffsets(OffsetsInitializer.latest())
                         .setValueOnlyDeserializer(new SimpleStringSchema())
                         .build();
 
@@ -35,7 +41,43 @@ DataStream<TradeEvent> events =
 			return  mapper.readValue(json, TradeEvent.class);
 		});
 
-events.print();
+		events = events.map(event -> {
+
+    String dateTime =
+            event.tradingDate + " " + event.tradingTime;
+
+    DateTimeFormatter formatter =
+            DateTimeFormatter.ofPattern(
+                    "dd-MM-yyyy HH:mm:ss.SSS"
+            );
+
+    LocalDateTime ts =
+            LocalDateTime.parse(dateTime, formatter);
+
+    event.eventTimestamp =
+            ts.toInstant(ZoneOffset.UTC)
+              .toEpochMilli();
+
+    return event;
+});
+
+DataStream<TradeEvent> withTimestamps =
+        events.assignTimestampsAndWatermarks(
+                WatermarkStrategy
+                        .<TradeEvent>forBoundedOutOfOrderness(
+                                Duration.ofSeconds(5)
+                        )
+                        .withTimestampAssigner(
+                                (event, ts) -> event.eventTimestamp
+                        )
+        );
+
+withTimestamps
+    .keyBy(event -> event.symbol)
+	.window(TumblingEventTimeWindows.of(Time.minutes(5)))
+	.reduce((event1, event2) -> 
+	                 event1.eventTimestamp > event2.eventTimestamp ? event1 : event2)
+    .print();
 
         //stream.print();
 
