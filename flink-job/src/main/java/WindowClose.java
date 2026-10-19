@@ -1,27 +1,29 @@
 public class WindowClose {
 
-    public String symbol;
-    public Double closePrice;
-    public Long windowEnd;
+    public String ID;
+
+    public String SecType;
+
+    public Long windowStart;
+
+    public Double close;
 
     public WindowClose() {}
 
-    public WindowClose(
-            String symbol,
-            Double closePrice,
-            Long windowEnd) {
-
-        this.symbol = symbol;
-        this.closePrice = closePrice;
-        this.windowEnd = windowEnd;
+    public WindowClose(String ID, String SecType, Long windowStart, Double close) {
+        this.ID = ID;
+        this.SecType = SecType;
+        this.windowStart = windowStart;
+        this.close = close;
     }
 
     @Override
     public String toString() {
         return "WindowClose{" +
-                "symbol='" + symbol + '\'' +
-                ", closePrice=" + closePrice +
-                ", windowEnd=" + windowEnd +
+                "ID='" + ID + '\'' +
+                ", SecType='" + SecType + '\'' +
+                ", windowStart=" + windowStart +
+                ", close=" + close +
                 '}';
     }
 }

@@ -7,9 +7,9 @@ producer = KafkaProducer(
 	value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
-df = pd.read_csv("../analysis/debs2022-gc-trading-day-14-11-21.csv",
+df = pd.read_csv("../analysis/monday_sample.csv",
 	comment="#",
-	usecols=["ID","Last","Trading time","Trading date"],
+	usecols=["ID","SecType","Last","Trading time","Trading date"],
 	index_col=False)
 print(len(df),"rows read from CSV file")
 
@@ -22,6 +22,7 @@ print(len(df),"rows after filtering")
 for _, row in df.iterrows():
 	event={
 		"symbol":row["ID"],
+		"SecType":row["SecType"],
 		"price":row["Last"],
 		"tradingTime":row["Trading time"],
 		"tradingDate":row["Trading date"]

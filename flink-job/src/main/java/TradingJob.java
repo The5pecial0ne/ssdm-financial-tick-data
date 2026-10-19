@@ -72,13 +72,18 @@ DataStream<TradeEvent> withTimestamps =
                         )
         );
 
-withTimestamps
+DataStream<WindowClose> windowCloses =
+        withTimestamps
     .keyBy(event -> event.symbol)
 	.window(TumblingEventTimeWindows.of(Time.minutes(5)))
 	.reduce((event1, event2) -> 
 	                 event1.eventTimestamp > event2.eventTimestamp ? event1 : event2)
-    .print();
+	.map(event -> new WindowClose(event.symbol, event.SecType, event.eventTimestamp, event.price));
 
+	windowCloses
+		.keyBy(windowClose -> windowClose.ID)
+		.process(new EmaProcessor())
+		.print();
         //stream.print();
 
         env.execute("Trading Job");

@@ -5,6 +5,7 @@ public class TradeEvent {
     public String tradingTime;
     public String tradingDate;
     public Long eventTimestamp;
+    public String SecType;
 
     public TradeEvent() {}
 
@@ -16,6 +17,7 @@ public class TradeEvent {
                 ", tradingTime='" + tradingTime + '\'' +
                 ", tradingDate='" + tradingDate + '\'' +
                 ", eventTimestamp=" + eventTimestamp +
+                ", SecType='" + SecType + '\'' +
                 '}';
     }
 }
