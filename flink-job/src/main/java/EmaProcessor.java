@@ -96,13 +96,15 @@ if (
     result.signal = signal;
 
     collector.collect(result);
+    //System.out.println("new line here");
+    //System.out.println("signal :" + signal);
 
-    System.out.println("EMA Result: " + windowClose.ID
+    /*System.out.println("EMA Result: " + windowClose.ID
             + " " + windowClose.SecType
             + " " + windowClose.windowStart
             + " close=" + windowClose.close
             + " ema38=" + ema38
             + " ema100=" + ema100
-            + " firstWindow=" + result.firstWindow);
+            + " firstWindow=" + result.firstWindow);*/
         }
 }

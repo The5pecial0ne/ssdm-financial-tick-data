@@ -18,4 +18,17 @@ public class EmaResult {
 
     public EmaResult() {
     }
+    @Override
+public String toString() {
+    return "EmaResult{" +
+            "ID='" + ID + '\'' +
+            ", SecType='" + SecType + '\'' +
+            ", windowStart=" + windowStart +
+            ", close=" + close +
+            ", ema38=" + ema38 +
+            ", ema100=" + ema100 +
+            ", firstWindow=" + firstWindow +
+            ", signal='" + signal + '\'' +
+            '}';
+}
 }
