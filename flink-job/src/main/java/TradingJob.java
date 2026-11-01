@@ -11,6 +11,11 @@ import java.time.format.DateTimeFormatter;
 import java.time.Duration;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
+//import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public class TradingJob {
 
@@ -80,10 +85,48 @@ DataStream<WindowClose> windowCloses =
 	                 event1.eventTimestamp > event2.eventTimestamp ? event1 : event2)
 	.map(event -> new WindowClose(event.symbol, event.SecType, event.eventTimestamp, event.price));
 
-	windowCloses
+	DataStream<EmaResult> emaResults = windowCloses
 		.keyBy(windowClose -> windowClose.ID)
-		.process(new EmaProcessor())
-		.print();
+		.process(new EmaProcessor());
+
+		ObjectMapper outputMapper = new ObjectMapper();
+
+/*DataStream<String> emaJson =
+    emaResults.map(result ->
+        outputMapper.writeValueAsString(result)
+    );*/
+	DataStream<String> emaJson =
+    emaResults.map(result ->
+        "{"
+        + "\"ID\":\"" + result.ID + "\","
+        + "\"SecType\":\"" + result.SecType + "\","
+        + "\"windowStart\":" + result.windowStart + ","
+        + "\"close\":" + result.close + ","
+        + "\"ema38\":" + result.ema38 + ","
+        + "\"ema100\":" + result.ema100 + ","
+        + "\"firstWindow\":" + result.firstWindow + ","
+        + "\"signal\":\"" + result.signal + "\""
+        + "}"
+    );
+	KafkaSink<String> emaSink =
+    KafkaSink.<String>builder()
+        .setBootstrapServers("kafka:9092")
+        .setRecordSerializer(
+            KafkaRecordSerializationSchema.builder()
+                .setTopic("ema-results")
+                .setValueSerializationSchema(
+                    new SimpleStringSchema()
+                )
+                .build()
+        )
+        //.setDeliveryGuarantee(
+        //    DeliveryGuarantee.AT_LEAST_ONCE
+        //)
+        .build();
+	emaJson.sinkTo(emaSink);
+
+		emaResults.print();
+		emaJson.print();
         //stream.print();
 
         env.execute("Trading Job");
