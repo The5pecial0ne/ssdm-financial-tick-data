@@ -21,3 +21,7 @@ Successfully verified all 10 records through Kafka consumer.
  Kafka -> Flink integration completed.
 Producer events successfully consumed by Flink KafkaSource.
 Running job remains active and process incoming Kafka messages.
+
+
+04-11-2026
+The project was developed using a single TaskManager Docker deployment. Attempts to execute the job using higher parallelism values resulted in NoResourceAvailableException, indicating insufficient available task slots. Consequently, the evaluation was performed using the available execution resources.
