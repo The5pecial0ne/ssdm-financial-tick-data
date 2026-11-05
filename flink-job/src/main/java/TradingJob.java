@@ -26,7 +26,7 @@ public class TradingJob {
 
         KafkaSource<String> source =
                 KafkaSource.<String>builder()
-                        .setBootstrapServers("kafka:9092")
+                        .setBootstrapServers("kafka:29092")
                         .setTopics("trading-events")
                         .setGroupId("trading-job")
                         .setStartingOffsets(OffsetsInitializer.latest())
@@ -110,7 +110,7 @@ DataStream<WindowClose> windowCloses =
     );
 	KafkaSink<String> emaSink =
     KafkaSink.<String>builder()
-        .setBootstrapServers("kafka:9092")
+        .setBootstrapServers("kafka:29092")
         .setRecordSerializer(
             KafkaRecordSerializationSchema.builder()
                 .setTopic("ema-results")
