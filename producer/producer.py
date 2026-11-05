@@ -1,13 +1,21 @@
 import pandas as pd
 import json
 from kafka import KafkaProducer
+from pathlib import Path
+
+DATA_FILE = (
+    Path(__file__).resolve().parent.parent
+    / "analysis"
+    / "test-slice.csv"
+)
+
 
 producer = KafkaProducer(
 	bootstrap_servers="localhost:9092",
 	value_serializer=lambda v: json.dumps(v).encode("utf-8")
 )
 
-df = pd.read_csv("../analysis/test-slice.csv",
+df = pd.read_csv(DATA_FILE,
 	comment="#",
 	usecols=["ID","SecType","Last","Trading time","Trading date"],
 	index_col=False)
