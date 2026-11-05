@@ -41,3 +41,20 @@ Prerequisites
     Docker/Flink:
     kafka:29092
 
+  ## Correctness validation
+
+A deterministic validation dataset and its reference output are included:
+
+- analysis/test-slice.csv - 1,917 real trade events
+- analysis/test-slice-expected.jsonl - expected window-level EMA and signal output
+
+For example, the first A169S8.ETR window should produce approximately:
+
+- close: 16027.61
+- EMA38: 821.928718
+- EMA100: 317.378416
+- first window: true
+- signal: buy
+
+The Flink implementation was validated against this reference output.
+
