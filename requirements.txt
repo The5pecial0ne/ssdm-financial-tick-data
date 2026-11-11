@@ -1,4 +1,6 @@
-pandas
-kafka-python
-streamlit
-pyarrow
+confluent-kafka>=2.5
+pandas>=2.2
+pyarrow>=16
+streamlit>=1.52
+altair>=5
+matplotlib>=3.8

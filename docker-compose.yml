@@ -1,49 +1,149 @@
+# The whole system. Two ways to use it:
+#
+#   docker compose up --build
+#       Live demo: replays a small real slice through Kafka and Flink.
+#       Dashboard at http://localhost:8501, Flink UI at http://localhost:8081.
+#
+#   python experiments/run_correctness.py   /   python experiments/run_benchmark.py
+#       Start only the pieces they need and drive the measurements.
+
+name: ssdm
+
+x-flink-config: &flink-config |
+  jobmanager.rpc.address: jobmanager
+  taskmanager.numberOfTaskSlots: 8
+  taskmanager.memory.process.size: ${TM_MEMORY:-2g}
+
 services:
 
- kafka:
-  image: apache/kafka:latest
-  container_name: kafka
+  kafka:
+    image: apache/kafka:3.9.0
+    ports:
+      - "9092:9092"                 # for programs on the host; containers use kafka:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: EXTERNAL://:9092,INTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:9092,INTERNAL://kafka:29092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
 
-  ports:
-    - "9092:9092"
+  # Creates the topics once and exits.
+  # Input: several partitions, so several Flink workers can read side by side.
+  # Outputs: the broker stamps each message with its arrival time (LogAppendTime),
+  # which is the "output" end of the latency measurement.
+  init-topics:
+    image: apache/kafka:3.9.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        for topic in ema-results advisories late-trades; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists \
+            --topic $$topic --partitions 1 --replication-factor 1 \
+            --config message.timestamp.type=LogAppendTime
+        done
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists \
+          --topic trading-events --partitions ${INPUT_PARTITIONS:-8} --replication-factor 1
+        /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --list
 
-  environment:
-    KAFKA_NODE_ID: 1
+  jobmanager:
+    build: ./flink-job
+    image: ssdm-flink:latest
+    command: jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      FLINK_PROPERTIES: *flink-config
 
-    KAFKA_PROCESS_ROLES: broker,controller
+  taskmanager:
+    image: ssdm-flink:latest
+    command: taskmanager
+    depends_on:
+      - jobmanager
+    cpus: ${TM_CPUS:-0}             # 0 = no limit; the benchmark sets this to the number of workers
+    environment:
+      FLINK_PROPERTIES: *flink-config
 
-    KAFKA_LISTENERS: EXTERNAL://:9092,INTERNAL://:29092,CONTROLLER://:9093
+  # Submits the streaming job to the cluster and exits.
+  job:
+    image: ssdm-flink:latest
+    depends_on:
+      init-topics:
+        condition: service_completed_successfully
+      jobmanager:
+        condition: service_started
+      taskmanager:
+        condition: service_started
+    volumes:
+      - ./config:/config:ro
+    environment:
+      FLINK_PROPERTIES: *flink-config
+    command:
+      - bash
+      - -c
+      - |
+        until (echo > /dev/tcp/jobmanager/8081) 2>/dev/null; do sleep 2; done
+        SUBSCRIBE=$$(grep -v '^#' /config/subscriptions.txt | tr -d '\r' | grep -v '^$$' | paste -sd, -)
+        flink run -d -m jobmanager:8081 -p ${PARALLELISM:-2} /opt/flink/job/trading-job.jar \
+          --run-id live --subscribe "$$SUBSCRIBE" --max-out-of-order-ms ${MAX_OUT_OF_ORDER_MS:-5000}
 
-    KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:9092,INTERNAL://kafka:29092
+  # Replays data into Kafka. By default the small test slice that ships in the image.
+  # For real data: put the day files in ./data and set REPLAY_ARGS, see the README.
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.tools
+    image: ssdm-tools:latest
+    depends_on:
+      job:
+        condition: service_completed_successfully
+    volumes:
+      - ./data:/app/data:ro
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+    command: sh -c "python producer/producer.py ${REPLAY_ARGS:-analysis/test-slice.csv --rate 60}"
 
-    KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  dashboard:
+    image: ssdm-tools:latest
+    depends_on:
+      init-topics:
+        condition: service_completed_successfully
+      producer:
+        condition: service_started
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./config:/app/config:ro
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092
+    command: >
+      streamlit run dashboard/dashboard.py
+      --server.address 0.0.0.0 --server.port 8501
+      --server.headless true --browser.gatherUsageStats false
 
-    KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-
-    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
-
-    KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-
-    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-    KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-
-    KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-
- jobmanager:
-  image: flink:1.20
-  container_name: jobmanager
-  command: jobmanager
-  ports:
-   - "8081:8081"
-  environment:
-   - JOB_MANAGER_RPC_ADDRESS=jobmanager
-
- taskmanager:
-  image: flink:1.20
-  container_name: taskmanager
-  command: taskmanager
-  depends_on:
-   - jobmanager
-  environment:
-   - JOB_MANAGER_RPC_ADDRESS=jobmanager
+  # Not started by "up". Used as: docker compose run --rm tools python tools/...
+  tools:
+    image: ssdm-tools:latest
+    profiles: ["tools"]
+    volumes:
+      - ./data:/app/data:ro
+      - ./answer_key:/app/answer_key:ro
+      - ./experiments/results:/app/experiments/results
+    environment:
+      KAFKA_BOOTSTRAP: kafka:29092

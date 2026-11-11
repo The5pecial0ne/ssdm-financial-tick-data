@@ -1,0 +1,10 @@
+.git
+data
+answer_key
+experiments/results
+flink-job
+venv
+.venv
+**/__pycache__
+analysis/*.png
+analysis/debs2022-*.csv

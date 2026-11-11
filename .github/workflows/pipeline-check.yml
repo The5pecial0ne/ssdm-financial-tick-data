@@ -1,0 +1,46 @@
+# Builds both Docker images and proves the pipeline end to end on every push:
+#   1. the real Kafka + Flink path gives exactly the answer key on the test slice
+#   2. the benchmark script runs (tiny data, so the numbers mean nothing here)
+#   3. the live demo (docker compose up) publishes the right windows and the dashboard answers
+name: pipeline check
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Correctness, test slice against the answer key
+        run: python3 experiments/run_correctness.py --name ci-correctness
+
+      - name: Benchmark script smoke test
+        run: python3 experiments/run_benchmark.py --workers 1,2 --repeats 1 --name ci-benchmark
+
+      - name: Live demo
+        run: |
+          docker compose up -d --build
+          docker compose wait producer
+          sleep 20
+          curl -fsS http://localhost:8501/_stcore/health
+          docker compose run --rm tools python tools/collect.py --out experiments/results/ci-live/raw
+          docker compose run --rm tools python tools/compare.py \
+            --results experiments/results/ci-live/raw/ema-results.jsonl \
+            --expected analysis/test-slice-expected.jsonl \
+            --symbols A169S8.ETR,A1EXV9.ETR
+          echo "advisories:"; cat experiments/results/ci-live/raw/advisories.jsonl
+
+      - name: Logs, if something failed
+        if: failure()
+        run: docker compose logs --tail 200
+
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: experiments/results

@@ -1,0 +1,13 @@
+# Python side of the project: producer, dashboard, result collection, comparison, plots.
+FROM python:3.12-slim
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY producer ./producer
+COPY tools ./tools
+COPY dashboard ./dashboard
+COPY config ./config
+# Small real slice and its expected output, so the demo and the self-check work without the dataset.
+COPY analysis/test-slice.csv analysis/test-slice-expected.jsonl ./analysis/
+CMD ["python", "producer/producer.py", "--help"]
