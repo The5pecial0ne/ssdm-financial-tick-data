@@ -1,0 +1,22 @@
+# Symbols the "traders" are subscribed to: one per line, lines starting with # are ignored.
+# The job computes the averages for every symbol but only publishes these.
+# Put the single word ALL here instead to publish everything.
+#
+# Ten busy symbols across the three exchanges (most 5-minute windows with trades in the week):
+A169S8.ETR
+A1EXV6.ETR
+A1EXV9.ETR
+A0Z3P1.ETR
+TCAMB.FR
+I2SAD.FR
+WLN.FR
+ACA.FR
+EUS5P.NL
+PHIA.NL
+ASML.NL
+# Five long-tail symbols that trade in only a handful of windows all week:
+939391.ETR
+590375.ETR
+854161.ETR
+TSL2.FR
+CBSM.FR

@@ -1,0 +1,8 @@
+# Keep Unix line endings in files that get copied into Linux containers, also on Windows checkouts.
+*.py text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
+*.java text eol=lf
+Dockerfile* text eol=lf
+*.parquet binary

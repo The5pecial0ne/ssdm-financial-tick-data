@@ -4,3 +4,5 @@ data/
 .DS_Store
 analysis/*.png
 venv/
+__pycache__/
+experiments/results/

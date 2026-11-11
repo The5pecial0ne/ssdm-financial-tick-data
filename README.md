@@ -1,60 +1,142 @@
-Prerequisites
-  Docker
-  Java 11+
-  Maven
-  Python 3
+# Detecting trading trends in financial tick data
 
-1. Clone repository
+Course project for CS-E4780 Scalable Systems and Data Management (Aalto, 2026).
 
-2. Python environment
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
+The system replays the [DEBS 2022 Grand Challenge tick data](https://doi.org/10.5281/zenodo.6382482)
+through Kafka into a Flink job that, for every symbol:
 
-3. Start infrastructure
-   docker compose up -d
+- **Query 1:** takes the last trade price of each 5-minute tumbling window and updates two
+  exponential moving averages, EMA38 and EMA100.
+- **Query 2:** raises a **buy** advisory when EMA38 crosses above EMA100 and a **sell** advisory
+  when it crosses below.
 
-4. Create Kafka topics
-   ./create-topics.sh
+A dashboard shows the averages and the advisories live.
 
-5. Build Flink application
-   cd flink-job
-   mvn clean package
+```
+CSV day files ──> producer ──> Kafka: trading-events (8 partitions, keyed by symbol)
+                                   │
+                                   ▼
+                    Flink: parse ─> trades only ─> key by symbol ─> 5-min event-time window
+                           ─> last trade ─> EMA38 / EMA100 ─> crossover?
+                                   │
+        ┌──────────────────────────┼─────────────────────────┐
+        ▼                          ▼                         ▼
+ Kafka: ema-results        Kafka: advisories         Kafka: late-trades
+ (Query 1, subscribed      (Query 2, buy / sell)     (trades that arrived after
+  symbols only)                                       their window had closed)
+        │
+        ▼
+   dashboard (Streamlit, http://localhost:8501)
+```
 
-6. Open Flink
-   http://localhost:8081
+## What you need
 
-7. Upload
-   flink-job-1.0.jar
+- Docker Desktop (or Docker Engine with the compose plugin). Give it at least 4 CPU cores and 6 GB of memory.
+- Python 3.9 or newer, only to start the experiment scripts. They use nothing outside the standard library.
 
-8. Run with parallelism 1
+Java, Maven, Kafka and Flink are **not** needed on your machine: everything is built and run inside containers.
+This works the same on macOS, Linux and Windows.
 
-9. From repository root run producer
-   python3 producer/producer.py
+## 1. Live demo
 
-10. Run dashboard
-    streamlit run dashboard/dashboard.py
+```
+docker compose up --build
+```
 
-    Host applications:
-    localhost:9092
+- Dashboard: http://localhost:8501
+- Flink UI: http://localhost:8081
 
-    Docker/Flink:
-    kafka:29092
+This replays a small real slice that ships with the repo (`analysis/test-slice.csv`: 1,917 trades of two
+indices on 8 and 9 November 2021). Stop with `Ctrl+C`, clean up with `docker compose down -v`.
 
-  ## Correctness validation
+To replay real data instead, put the day files from Zenodo in `data/` and set `REPLAY_ARGS`, for example
 
-A deterministic validation dataset and its reference output are included:
+```
+REPLAY_ARGS="data/debs2022-gc-trading-day-08-11-21.csv --from-time 09:00 --to-time 11:00 --rate 20000" docker compose up --build
+```
 
-- analysis/test-slice.csv - 1,917 real trade events
-- analysis/test-slice-expected.jsonl - expected window-level EMA and signal output
+(on Windows PowerShell: `$env:REPLAY_ARGS="..."; docker compose up --build`).
 
-For example, the first A169S8.ETR window should produce approximately:
+Which symbols are published is set in `config/subscriptions.txt`. The job always computes every symbol.
 
-- close: 16027.61
-- EMA38: 821.928718
-- EMA100: 317.378416
-- first window: true
-- signal: buy
+## 2. Correctness check
 
-The Flink implementation was validated against this reference output.
+The expected output comes from an independent pandas implementation (`analysis/answer_key_v3.py`),
+stored in `answer_key/answer-key-week.parquet`.
 
+```
+python experiments/run_correctness.py                    # built-in slice, about a minute, no dataset needed
+python experiments/run_correctness.py --days 08-11-21    # all of Monday, needs the day file in data/
+```
+
+It loads the trades into Kafka, runs the Flink job over them, collects the output and compares every
+window (close, EMA38, EMA100, signal) with the answer key. `RESULT: PASS` and exit code 0 mean everything matched.
+
+## 3. Scalability benchmark
+
+```
+python experiments/run_benchmark.py --files data/debs2022-gc-trading-day-08-11-21.csv --from-time 09:00 --to-time 10:00 --workers 1,2,4,8 --repeats 3
+```
+
+The slice is loaded into Kafka once. Then, for each worker count, a fresh Flink TaskManager limited to that many
+CPU cores processes the whole topic as fast as it can. Results land in `experiments/results/<name>/`:
+
+| File | What it holds |
+| --- | --- |
+| `summary.csv` | one row per run: seconds, events per second, latency percentiles, CPU and memory per container |
+| `scaling.csv` | one row per worker count: median over the repeats, speedup, efficiency |
+| `throughput.png`, `speedup.png`, `latency.png`, `cpu.png` | the plots |
+| `runs.json`, `raw/` | machine description, settings and every raw output line |
+
+Latency is measured from the moment Flink computes a result (`detected_at`) to the moment the Kafka broker
+stores it (the broker's own timestamp on the output topic).
+
+Every run also gets a fingerprint of its output, so the summary shows whether 1, 2, 4 and 8 workers
+produced identical results.
+
+## 4. The Docker images
+
+`docker compose build` produces two images:
+
+| Image | Contents |
+| --- | --- |
+| `ssdm-flink:latest` | Flink 1.20 with the job jar (built by Maven inside the image build). Runs as JobManager, TaskManager and job submitter. |
+| `ssdm-tools:latest` | Python: producer, dashboard, result collection, comparison, plots, the test slice. |
+
+To hand them over as files:
+
+```
+docker compose build
+docker save ssdm-flink:latest ssdm-tools:latest -o ssdm-images.tar
+# on the other machine
+docker load -i ssdm-images.tar
+docker compose up
+```
+
+Images built on an Apple-silicon Mac are `arm64`. For a machine with an Intel or AMD processor, build there,
+or build with `docker buildx build --platform linux/amd64`.
+
+## Repository layout
+
+| Path | What |
+| --- | --- |
+| `flink-job/` | The Flink job (Java 11) and its Dockerfile |
+| `producer/producer.py` | Replays CSV day files into Kafka |
+| `dashboard/dashboard.py` | Live dashboard |
+| `tools/` | `collect.py` (Kafka topic to file), `compare.py` (output against answer key), `summarize.py` (benchmark tables and plots) |
+| `experiments/` | `run_correctness.py`, `run_benchmark.py` |
+| `config/subscriptions.txt` | Symbols whose results are published |
+| `analysis/`, `answer_key/` | Data exploration and the pandas answer key |
+| `DECISION.MD` | Design decisions, in date order |
+
+## How the job treats the data
+
+- A row is a trade when `Last` is a number above 0 and `Trading time` is present and is not `01:00:00.000`
+  (a placeholder the feed uses when the real time is missing). Everything else is filtered out inside Flink.
+- Event time is `Date` + `Trading time`. The `Trading date` column is empty in the files.
+- Windows are 5 minutes long, do not overlap and are aligned to midnight exchange time (CET).
+- A window closes once the watermark passes its end. The watermark trails the newest trade by
+  5 seconds (`--max-out-of-order-ms`). Trades that arrive later than that go to the `late-trades` topic.
+- Both averages start at 0, as the project description defines. A symbol's first window therefore always
+  looks like a crossover; it is flagged `first_window` and is not published as an advisory.
+- A window without trades produces no output and leaves the averages unchanged.
