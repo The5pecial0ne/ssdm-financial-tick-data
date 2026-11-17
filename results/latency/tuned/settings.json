@@ -1,0 +1,2 @@
+{"rates": "20000 50000 100000 0", "cores": "4", "day": "08-11-21", "from": "08:00", "to": "12:00", "events": "trades",
+ "limit": 3000000, "ooo_ms": 5000, "job_args": "--buffer-timeout-ms 5 --watermark-interval-ms 50", "host": "Darwin arm64", "docker_cpus": "10"}

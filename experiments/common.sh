@@ -22,12 +22,14 @@ stack_up() {
   until $KT --list >/dev/null 2>&1; do sleep 2; done
 }
 
-# Recreates one topic, so a run never reads what an earlier run left behind
+# Recreates one topic, so a run never reads what an earlier run left behind.
+# retention.ms=-1: Flink stamps its output records with their event time (2021), so with Kafka's
+# default 7-day retention the broker deletes them at its next 5-minute retention check, mid-run.
 recreate_topic() {
   local topic=$1 parts=${2:-1}
   $KT --delete --if-exists --topic "$topic" >/dev/null 2>&1 || true
   while $KT --list | grep -qx "$topic"; do sleep 1; done
-  $KT --create --topic "$topic" --partitions "$parts" --replication-factor 1 >/dev/null
+  $KT --create --topic "$topic" --partitions "$parts" --replication-factor 1 --config retention.ms=-1 >/dev/null
 }
 
 reset_outputs() {

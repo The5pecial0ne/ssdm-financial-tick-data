@@ -1,0 +1,350 @@
+STEP latency-default start 22:47:43
+
+[22:47:44] starting Kafka and Flink (first run builds the images, a few minutes)
+ Image ssdm-flink:1.0 Building 
+ Image ssdm-flink:1.0 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.15kB done
+#1 DONE 0.0s
+
+#2 [jobmanager internal] load build definition from Dockerfile
+#2 transferring dockerfile: 640B done
+#2 DONE 0.0s
+
+#3 [taskmanager internal] load metadata for docker.io/library/flink:1.20.0-java17
+#3 ...
+
+#4 [auth] library/flink:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [auth] library/maven:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [taskmanager internal] load metadata for docker.io/library/maven:3.9.9-eclipse-temurin-17
+#6 DONE 1.3s
+
+#3 [taskmanager internal] load metadata for docker.io/library/flink:1.20.0-java17
+#3 DONE 1.3s
+
+#7 [jobmanager internal] load .dockerignore
+#7 transferring context: 138B done
+#7 DONE 0.0s
+
+#8 [taskmanager internal] load build context
+#8 transferring context: 1.28kB done
+#8 DONE 0.0s
+
+#9 [jobmanager build 1/6] FROM docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc
+#9 resolve docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc 0.0s done
+#9 DONE 0.0s
+
+#10 [taskmanager stage-1 1/3] FROM docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e
+#10 resolve docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e 0.0s done
+#10 DONE 0.0s
+
+#11 [taskmanager build 6/6] RUN mvn -B -q package -DskipTests
+#11 CACHED
+
+#12 [taskmanager stage-1 2/3] COPY --from=build /src/target/flink-job-1.0.jar /opt/ssdm/trading-job.jar
+#12 CACHED
+
+#13 [taskmanager build 5/6] COPY flink-job/src ./src
+#13 CACHED
+
+#14 [taskmanager build 4/6] RUN mvn -B -q dependency:go-offline
+#14 CACHED
+
+#15 [taskmanager build 3/6] COPY flink-job/pom.xml .
+#15 CACHED
+
+#16 [taskmanager build 2/6] WORKDIR /src
+#16 CACHED
+
+#17 [taskmanager stage-1 3/3] COPY config/ /opt/ssdm/config/
+#17 CACHED
+
+#18 [taskmanager] exporting to image
+#18 exporting layers done
+#18 exporting manifest sha256:6b88bb331752a7290ff0c75ce69860d1deb0da29a6819ead67bbb2ffb21950d7 done
+#18 exporting config sha256:bf81acfe52986a18df29931c714c4995cfe57e0c4b4e09d34d7703e35245f703 done
+#18 exporting attestation manifest sha256:685151892e91772bedffaf5d830ae389988c2518b6018b923fcc9916853ca362 done
+#18 exporting manifest list sha256:610353d29dd414021edf72d3194e5dc50104100187c512667c6928fad0bc7290 done
+#18 naming to docker.io/library/ssdm-flink:1.0 done
+#18 unpacking to docker.io/library/ssdm-flink:1.0 done
+#18 DONE 0.0s
+
+#19 [jobmanager] exporting to image
+#19 exporting layers done
+#19 exporting manifest sha256:292100bcfbe09cfc8bcd1cf58d58a7bdb8374edaf7166f81b673af90537bb11b done
+#19 exporting config sha256:1115c509a1bc8a8e6b38b43738d51a9185febcc589d3189f8e8b23b4de5d19b7 done
+#19 exporting attestation manifest sha256:db993d5927ddfcd79d107fadcc0acbf22eae855dc44ef5152080d2e740577cea done
+#19 exporting manifest list sha256:694f29ca6579cf4e736a97eb259d75f0438eeaedbf7a3ea6868d3ab41c1408c0 done
+#19 naming to docker.io/library/ssdm-flink:1.0 done
+#19 unpacking to docker.io/library/ssdm-flink:1.0 done
+#19 DONE 0.0s
+
+#20 [taskmanager] resolving provenance for metadata file
+#20 DONE 0.0s
+
+#21 [jobmanager] resolving provenance for metadata file
+#21 DONE 0.0s
+ Image ssdm-flink:1.0 Built 
+ Image ssdm-flink:1.0 Built 
+ Container kafka Running 
+ Container jobmanager Recreate 
+ Container jobmanager Recreated 
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container kafka Waiting 
+ Container jobmanager Starting 
+ Container jobmanager Started 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+ Container kafka Healthy 
+ Container ssdm-financial-tick-data-kafka-init-1 Starting 
+ Container ssdm-financial-tick-data-kafka-init-1 Started 
+
+[22:47:50] TaskManager: 4 core(s), 4 slot(s)
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+
+[22:47:53] latency run: 4 core(s), rate 20000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 150.0s (19,997 events/s)
+wrote 5,891 records from ema-results to results/latency/20261117-224744/results-c4-rate20000.jsonl
+Exception ignored while flushing sys.stdout:
+BrokenPipeError: [Errno 32] Broken pipe
+./experiments/common.sh: line 78: 52583 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[22:50:51] latency run: 4 core(s), rate 50000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 60.0s (49,980 events/s)
+wrote 96,765 records from ema-results to results/latency/20261117-224744/results-c4-rate50000.jsonl
+./experiments/common.sh: line 78: 52945 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[22:52:20] latency run: 4 core(s), rate 100000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 30.0s (99,940 events/s)
+wrote 96,765 records from ema-results to results/latency/20261117-224744/results-c4-rate100000.jsonl
+./experiments/common.sh: line 78: 53134 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[22:53:18] latency run: 4 core(s), rate 0 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 10.3s (291,546 events/s)
+wrote 96,765 records from ema-results to results/latency/20261117-224744/results-c4-rate0.jsonl
+./experiments/common.sh: line 78: 53262 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[22:53:57] done: results/latency/20261117-224744  (next: python -m experiments.analyze)
+STEP latency-default end rc=0 secs=374
+STEP latency-tuned start 22:54:57
+
+[22:54:57] starting Kafka and Flink (first run builds the images, a few minutes)
+ Image ssdm-flink:1.0 Building 
+ Image ssdm-flink:1.0 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.15kB done
+#1 DONE 0.0s
+
+#2 [taskmanager internal] load build definition from Dockerfile
+#2 transferring dockerfile: 640B done
+#2 DONE 0.0s
+
+#3 [auth] library/flink:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [auth] library/maven:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [taskmanager internal] load metadata for docker.io/library/maven:3.9.9-eclipse-temurin-17
+#5 DONE 0.7s
+
+#6 [jobmanager internal] load metadata for docker.io/library/flink:1.20.0-java17
+#6 DONE 0.7s
+
+#7 [jobmanager internal] load .dockerignore
+#7 transferring context: 138B done
+#7 DONE 0.0s
+
+#8 [jobmanager internal] load build context
+#8 transferring context: 1.28kB done
+#8 DONE 0.0s
+
+#9 [taskmanager stage-1 1/3] FROM docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e
+#9 resolve docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e 0.0s done
+#9 DONE 0.0s
+
+#10 [taskmanager build 1/6] FROM docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc
+#10 resolve docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc 0.0s done
+#10 DONE 0.0s
+
+#11 [taskmanager build 3/6] COPY flink-job/pom.xml .
+#11 CACHED
+
+#12 [taskmanager build 2/6] WORKDIR /src
+#12 CACHED
+
+#13 [taskmanager stage-1 2/3] COPY --from=build /src/target/flink-job-1.0.jar /opt/ssdm/trading-job.jar
+#13 CACHED
+
+#14 [taskmanager build 5/6] COPY flink-job/src ./src
+#14 CACHED
+
+#15 [taskmanager build 6/6] RUN mvn -B -q package -DskipTests
+#15 CACHED
+
+#16 [taskmanager build 4/6] RUN mvn -B -q dependency:go-offline
+#16 CACHED
+
+#17 [taskmanager stage-1 3/3] COPY config/ /opt/ssdm/config/
+#17 CACHED
+
+#18 [jobmanager] exporting to image
+#18 exporting layers done
+#18 exporting manifest sha256:292100bcfbe09cfc8bcd1cf58d58a7bdb8374edaf7166f81b673af90537bb11b done
+#18 exporting config sha256:1115c509a1bc8a8e6b38b43738d51a9185febcc589d3189f8e8b23b4de5d19b7 done
+#18 exporting attestation manifest sha256:627550c19474de63845d4d9e798e37e81a3a105b64fc030e111b9a692b03beec done
+#18 exporting manifest list sha256:cd436d71f5d54189ea4518fe2d160378414029b40062dfd0b84bea254e737bcd done
+#18 naming to docker.io/library/ssdm-flink:1.0 done
+#18 unpacking to docker.io/library/ssdm-flink:1.0 done
+#18 DONE 0.0s
+
+#19 [taskmanager] exporting to image
+#19 exporting layers done
+#19 exporting manifest sha256:6b88bb331752a7290ff0c75ce69860d1deb0da29a6819ead67bbb2ffb21950d7 done
+#19 exporting config sha256:bf81acfe52986a18df29931c714c4995cfe57e0c4b4e09d34d7703e35245f703 done
+#19 exporting attestation manifest sha256:20e41a2062ea1992eee3c97d900e650dfc646eeb3a12353dc3e394bb0d859c3d done
+#19 exporting manifest list sha256:4447cc39120cf66e3941ac11ba2f58253a70b8e67b992a2e1f4024ede271d73e done
+#19 naming to docker.io/library/ssdm-flink:1.0 done
+#19 unpacking to docker.io/library/ssdm-flink:1.0 done
+#19 DONE 0.1s
+
+#20 [jobmanager] resolving provenance for metadata file
+#20 DONE 0.0s
+
+#21 [taskmanager] resolving provenance for metadata file
+#21 DONE 0.0s
+ Image ssdm-flink:1.0 Built 
+ Image ssdm-flink:1.0 Built 
+ Container kafka Running 
+ Container jobmanager Recreate 
+ Container jobmanager Recreated 
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container kafka Waiting 
+ Container jobmanager Starting 
+ Container jobmanager Started 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+ Container kafka Healthy 
+ Container ssdm-financial-tick-data-kafka-init-1 Starting 
+ Container ssdm-financial-tick-data-kafka-init-1 Started 
+
+[22:55:03] TaskManager: 4 core(s), 4 slot(s)
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+
+[22:55:05] latency run: 4 core(s), rate 20000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 150.0s (19,997 events/s)
+wrote 83,149 records from ema-results to results/latency/tuned/results-c4-rate20000.jsonl
+./experiments/common.sh: line 78: 53444 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[22:58:04] latency run: 4 core(s), rate 50000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 60.0s (49,984 events/s)
+wrote 96,765 records from ema-results to results/latency/tuned/results-c4-rate50000.jsonl
+./experiments/common.sh: line 78: 53811 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[22:59:33] latency run: 4 core(s), rate 100000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 30.0s (99,939 events/s)
+wrote 96,765 records from ema-results to results/latency/tuned/results-c4-rate100000.jsonl
+./experiments/common.sh: line 78: 53992 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[23:00:31] latency run: 4 core(s), rate 0 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 10.4s (289,400 events/s)
+wrote 96,765 records from ema-results to results/latency/tuned/results-c4-rate0.jsonl
+./experiments/common.sh: line 78: 54138 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[23:01:10] done: results/latency/tuned  (next: python -m experiments.analyze)
+STEP latency-tuned end rc=0 secs=373
+STEP ooo-sweep start 23:02:10
+computing the reference for 08-11-21 once ...
+debs2022-gc-trading-day-08-11-21.csv: 373,126 symbol-windows, 4,840 signals, 29s
+wrote 373,126 rows to results/ooo-sweep/20261117-230210/reference.parquet
+== out-of-order bound 0 ms
+Wrote 373 126 window results to results/ooo-sweep/20261117-230210/flink-ooo0.jsonl and 0 late trades to results/ooo-sweep/20261117-230210/flink-ooo0.late.csv
+values: 0 windows differ beyond 1e-09 relative; max relative error {'close': 2.2186711123604248e-16, 'ema38': 9.390278811237117e-13, 'ema100': 9.11928946414619e-13}
+signals_all: {'expected': 4840, 'matched': 4840, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+signals_excluding_first_windows: {'expected': 0, 'matched': 0, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+PASSED -> results/ooo-sweep/20261117-230210/validation-ooo0.json
+== out-of-order bound 1000 ms
+Wrote 373 126 window results to results/ooo-sweep/20261117-230210/flink-ooo1000.jsonl and 0 late trades to results/ooo-sweep/20261117-230210/flink-ooo1000.late.csv
+values: 0 windows differ beyond 1e-09 relative; max relative error {'close': 2.2186711123604248e-16, 'ema38': 9.390278811237117e-13, 'ema100': 9.11928946414619e-13}
+signals_all: {'expected': 4840, 'matched': 4840, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+signals_excluding_first_windows: {'expected': 0, 'matched': 0, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+PASSED -> results/ooo-sweep/20261117-230210/validation-ooo1000.json
+== out-of-order bound 5000 ms
+Wrote 373 126 window results to results/ooo-sweep/20261117-230210/flink-ooo5000.jsonl and 0 late trades to results/ooo-sweep/20261117-230210/flink-ooo5000.late.csv
+values: 0 windows differ beyond 1e-09 relative; max relative error {'close': 2.2186711123604248e-16, 'ema38': 9.390278811237117e-13, 'ema100': 9.11928946414619e-13}
+signals_all: {'expected': 4840, 'matched': 4840, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+signals_excluding_first_windows: {'expected': 0, 'matched': 0, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+PASSED -> results/ooo-sweep/20261117-230210/validation-ooo5000.json
+== out-of-order bound 30000 ms
+Wrote 373 126 window results to results/ooo-sweep/20261117-230210/flink-ooo30000.jsonl and 0 late trades to results/ooo-sweep/20261117-230210/flink-ooo30000.late.csv
+values: 0 windows differ beyond 1e-09 relative; max relative error {'close': 2.2186711123604248e-16, 'ema38': 9.390278811237117e-13, 'ema100': 9.11928946414619e-13}
+signals_all: {'expected': 4840, 'matched': 4840, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+signals_excluding_first_windows: {'expected': 0, 'matched': 0, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+PASSED -> results/ooo-sweep/20261117-230210/validation-ooo30000.json
+== out-of-order bound 120000 ms
+Wrote 373 126 window results to results/ooo-sweep/20261117-230210/flink-ooo120000.jsonl and 0 late trades to results/ooo-sweep/20261117-230210/flink-ooo120000.late.csv
+values: 0 windows differ beyond 1e-09 relative; max relative error {'close': 2.2186711123604248e-16, 'ema38': 9.390278811237117e-13, 'ema100': 9.11928946414619e-13}
+signals_all: {'expected': 4840, 'matched': 4840, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+signals_excluding_first_windows: {'expected': 0, 'matched': 0, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+PASSED -> results/ooo-sweep/20261117-230210/validation-ooo120000.json
+bound_ms,seconds,late_trades,passed
+0,24.0,0,1
+1000,25.1,0,1
+5000,24.4,0,1
+30000,24.9,0,1
+120000,25.2,0,1
+done: results/ooo-sweep/20261117-230210  (next: python -m experiments.analyze)
+STEP ooo-sweep end rc=0 secs=161
+CHAIN DONE

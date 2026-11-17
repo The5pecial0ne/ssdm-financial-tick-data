@@ -6,3 +6,8 @@ venv/
 analysis/*.png
 results/ci/
 __pycache__/
+# Raw experiment dumps (hundreds of MB, over GitHub's file limit); the numbers behind them are in summary.csv / summary.md
+results/**/flink-output.jsonl
+results/**/flink-ooo*.jsonl
+results/**/reference.parquet
+results/latency/**/results-*.jsonl

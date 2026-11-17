@@ -1,0 +1,16 @@
+{
+  "events": 3000000,
+  "seconds": 150.023,
+  "events_per_second": 19997,
+  "files": [
+    "/Users/manasvernekar/Documents/Projects/ssdm-financial-tick-data/data/debs2022-gc-trading-day-08-11-21.csv"
+  ],
+  "events_kind": "trades",
+  "exchanges": null,
+  "from": "08:00",
+  "to": "12:00",
+  "rate": 20000.0,
+  "speed": 0,
+  "topic": "ticks",
+  "start_wall_ms": 1794949604245
+}

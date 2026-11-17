@@ -63,7 +63,7 @@ done
 if [[ "$VALIDATE" == "1" ]]; then
   log "checking the last run's output against the reference"
   $PY -m tools.dump_topic ema-results "$OUT/flink-output.jsonl" --idle 10
-  if [[ "$DAYS" == "weekdays" && "$EVENTS$EXCHANGES${FROM:-}${TO:-}" == "trades" ]]; then
+  if [[ "$DAYS" == "weekdays" && "$EVENTS${EXCHANGES:-}${FROM:-}${TO:-}" == "trades" ]]; then
     $PY -m tools.validate --flink "$OUT/flink-output.jsonl" --answer-key answer_key/answer-key-week.parquet \
       --report "$OUT/validation.json" || true
   else
