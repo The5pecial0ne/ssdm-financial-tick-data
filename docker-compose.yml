@@ -57,9 +57,10 @@ services:
     command:
       - |
         KT="/opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092"
-        $$KT --create --if-not-exists --topic ticks --partitions ${PARTITIONS:-8} --replication-factor 1
+        # retention.ms=-1: records carry 2021 event-time timestamps, which the default 7-day retention would delete
+        $$KT --create --if-not-exists --topic ticks --partitions ${PARTITIONS:-8} --replication-factor 1 --config retention.ms=-1
         for t in ema-results advisories late-trades; do
-          $$KT --create --if-not-exists --topic $$t --partitions 1 --replication-factor 1
+          $$KT --create --if-not-exists --topic $$t --partitions 1 --replication-factor 1 --config retention.ms=-1
         done
         $$KT --list
     restart: "no"
