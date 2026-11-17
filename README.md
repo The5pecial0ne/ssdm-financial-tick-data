@@ -8,7 +8,10 @@ computes **EMA38 and EMA100 for every symbol in 5-minute tumbling windows** (Que
 **buy/sell advisories on EMA crossovers** (Query 2). A **Streamlit dashboard** shows the results
 (smart visualization). Every result is checked against an independent pandas reference.
 
-![Dashboard](docs/dashboard.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
+  <img alt="The dashboard: advisory feed, every symbol's trend, and one symbol's price with its EMAs and advisories" src="docs/dashboard.png">
+</picture>
 
 ## Architecture
 
@@ -164,7 +167,7 @@ python -m experiments.analyze       # -> results/figures/*.png, results/summary.
 analysis/        data exploration and the original answer-key scripts (pandas), test slice
 answer_key/      reference results (parquet)
 config/          subscribed symbols
-dashboard/       Streamlit dashboard
+dashboard/       Streamlit dashboard (its light and dark theme is in .streamlit/config.toml)
 experiments/     experiment scripts and analysis
 flink-job/       the Flink job (Java 11, Flink 1.20), Dockerfile, run-local.sh
 producer/        Kafka producer
