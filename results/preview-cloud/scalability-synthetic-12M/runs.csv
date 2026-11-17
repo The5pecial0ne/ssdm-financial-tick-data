@@ -1,0 +1,7 @@
+cores,repeat,job_id,state,run_ms
+1,1,local,FINISHED,39980
+1,2,local,FINISHED,39265
+2,1,local,FINISHED,23796
+2,2,local,FINISHED,23139
+4,1,local,FINISHED,14613
+4,2,local,FINISHED,14346
