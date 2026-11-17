@@ -20,15 +20,17 @@ def main():
     ap.add_argument("output")
     ap.add_argument("--bootstrap", default="localhost:9092")
     ap.add_argument("--idle", type=float, default=15, help="stop after this many seconds without new records")
+    ap.add_argument("--wait-first", type=float, default=60, help="how long to wait for the first record")
     ap.add_argument("--raw", action="store_true", help="records aren't JSON; write {'value': ..., 'kafkaTs': ...}")
     a = ap.parse_args()
 
     c = Consumer({"bootstrap.servers": a.bootstrap, "group.id": f"dump-{uuid.uuid4()}",
                   "auto.offset.reset": "earliest", "enable.auto.commit": False})
     c.subscribe([a.topic])
-    n, last = 0, time.time()
+    n, last, started = 0, None, time.time()
     with open(a.output, "w", encoding="utf-8") as f:
-        while time.time() - last < a.idle:
+        # Joining the consumer group takes a few seconds, so the idle clock only starts at the first record
+        while (time.time() - last < a.idle) if last else (time.time() - started < a.wait_first):
             msgs = c.consume(10000, timeout=1.0)
             for m in msgs:
                 if m.error():
