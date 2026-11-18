@@ -40,6 +40,9 @@ class CoreLogicTest {
         assertEquals(TickEvent.MALFORMED, p.parse("garbage", 0, 0).kind);
         assertNull(p.parse("# licence line", 0, 0));
         assertEquals(TickEvent.END_OF_STREAM, p.parse("#EOS,123", 0, 0).kind);
+        TickEvent start = p.parse("#SOS,456", 0, 0);
+        assertEquals(TickEvent.START_OF_STREAM, start.kind);
+        assertEquals(456L, start.eventTs);
     }
 
     @Test

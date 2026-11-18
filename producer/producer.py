@@ -60,6 +60,21 @@ def send(p: Producer, topic: str, key: bytes, value: bytes):
             p.poll(0.05)   # local queue full: let librdkafka drain it, then retry
 
 
+def announce_start(p: Producer, topic: str, ts_ms: int, pause: float):
+    """Sends a start marker to every partition, then gives Flink a moment before the data follows.
+
+    A job that is already running marks its Kafka partitions idle while no input arrives (--idle-ms).
+    When the replay starts, the first partition to receive trades would then drive the watermark on
+    its own, and trades landing in the other partitions a few milliseconds later would already count
+    as late. The marker wakes every partition up first, so they hold the watermark back together.
+    """
+    marker = f"#SOS,{ts_ms}".encode()
+    for part in p.list_topics(topic, timeout=10).topics[topic].partitions:
+        p.produce(topic, value=marker, partition=part)
+    p.flush(30)
+    time.sleep(pause)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--bootstrap", default="localhost:9092")
@@ -75,6 +90,9 @@ def main():
     ap.add_argument("--rate", type=float, default=0, help="cap in events per second (0 = as fast as possible)")
     ap.add_argument("--speed", type=float, default=0, help="replay at N times market speed (0 = off)")
     ap.add_argument("--limit", type=int, default=0, help="stop after this many events")
+    ap.add_argument("--no-sos", action="store_true", help="don't send the start-of-stream marker")
+    ap.add_argument("--start-pause", type=float, default=2.0,
+                    help="seconds to wait after the start marker (keep it under the job's --idle-ms)")
     ap.add_argument("--no-eos", action="store_true",
                     help="don't send the end-of-stream marker that flushes the last windows")
     ap.add_argument("--boundaries", help="CSV log of when each window boundary was crossed")
@@ -96,6 +114,7 @@ def main():
     max_window = -1            # highest 5-minute window index seen so far
     boundaries = []            # (window_end_ms, wall_ms)
     last_report = t_start
+    started = False
 
     for day_index, path in enumerate(paths):
         if not a.quiet:
@@ -108,6 +127,13 @@ def main():
                 chunk = chunk.iloc[: max(0, a.limit - sent)]
             ts = ticks.trade_timestamps_ms(chunk)
             window = np.where(ts >= 0, ts // ticks.WINDOW_MS, -1)
+            if not started:
+                started = True
+                if not a.no_sos:
+                    valid = ts[ts >= 0]
+                    announce_start(p, topic, int(valid.min() // ticks.WINDOW_MS * ticks.WINDOW_MS) if len(valid) else 0,
+                                   a.start_pause)
+                    t_start = last_report = time.time()   # the pause doesn't count towards throughput
 
             values = (chunk["ID"] + "," + chunk["SecType"] + "," + chunk["Date"] + "," + chunk["Time"] + ","
                       + chunk["Trading time"] + "," + chunk["Last"] + "," + chunk["seq"].astype(str)).str.encode("utf-8")
