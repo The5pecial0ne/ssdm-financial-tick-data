@@ -36,7 +36,16 @@ jar="$here/target/flink-job-1.0.jar" sep=":"
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*) jar="$(cygpath -w "$jar")" sep=";" ;;
 esac
-py=$(command -v python3 || command -v python)
+# Absolute input paths, because Flink's file source resolves relative ones on its own terms.
+# Done in bash: on Windows, `python3` is often only the Microsoft Store placeholder.
+abs_path() {
+  local p=$1
+  [[ $p == /* || $p =~ ^[A-Za-z]: ]] || p="$PWD/$p"
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) cygpath -w "$p" ;;
+    *) printf '%s\n' "$p" ;;
+  esac
+}
 
 run() {
   java ${JAVA_OPTS:--Xmx2g} \
@@ -50,7 +59,8 @@ if [[ $mode == args ]]; then
   run "$@"
 else
   mkdir -p "$(dirname "$output")"
-  # Absolute paths, because Flink's file source resolves relative ones on its own terms
-  abs_inputs=$("$py" -c 'import os,sys; print(",".join(os.path.abspath(x) for x in sys.argv[1].split(",")))' "$input")
+  abs_inputs=""
+  IFS=, read -ra inputs <<< "$input"
+  for f in "${inputs[@]}"; do abs_inputs+="${abs_inputs:+,}$(abs_path "$f")"; done
   run --input-file "$abs_inputs" --output-file "$output" "$@"
 fi

@@ -48,9 +48,24 @@ each symbol, `EMAʲ = close·2/(1+j) + EMAʲ_prev·(1 − 2/(1+j))`. Buy when EM
 sell when it crosses below (equations 1 to 4). A window with no trades doesn't update the EMA. Trades
 stamped with the placeholder time `01:00:00.000` are counted and dropped, because their real time is unknown.
 
-## Quick start: check correctness in 2 minutes (no data download, no Docker)
+## Quick start: the self-checking demo (Docker, no data download)
 
-Needs Java 11+, Maven and Python 3.10+.
+```bash
+docker compose --profile demo up -d --build
+docker compose --profile demo logs -f verify      # ends with PASSED
+```
+
+This builds the images, replays a real excerpt of the data through Kafka into Flink, compares
+Flink's output window by window with the pandas reference, and serves the dashboard at
+http://localhost:8501 (Flink UI at http://localhost:8081). `DEMO_INPUT=synthetic` replays three
+generated days (2.1M events) instead. Stop with `docker compose --profile demo down --volumes`.
+
+**Running it on another machine** (Linux, Windows, macOS, prebuilt images, offline image file):
+see [docs/TESTING.md](docs/TESTING.md).
+
+## Quick start without Docker: check correctness in 2 minutes
+
+Needs Java 11+, Maven and Python 3.10+. On Windows, use Git Bash.
 
 ```bash
 python3 -m venv venv && source venv/bin/activate
@@ -70,7 +85,8 @@ python -m tools.synth -n 3000000 -o data/synthetic.csv
 python -m tools.validate --flink results/synthetic.jsonl --csv data/synthetic.csv
 ```
 
-GitHub Actions runs both on every push (`.github/workflows/ci.yml`).
+GitHub Actions runs both on every push, plus the Docker demo on a clean Ubuntu machine and this
+quick start on Windows (`.github/workflows/ci.yml`).
 
 ## Get the data
 
@@ -85,7 +101,7 @@ data/debs2022-gc-trading-day-08-11-21.csv   ... data/debs2022-gc-trading-day-14-
 
 ## Run the whole system (Docker)
 
-Needs Docker Desktop (give it at least 6 CPUs and 8 GB).
+Needs Docker Desktop (give it at least 6 CPUs and 8 GB) and the data in `data/`.
 
 ```bash
 docker compose --profile app up -d --build
@@ -99,8 +115,15 @@ TaskManager (4 cores and 4 slots by default), submits the job for the symbols in
 - Flink UI: http://localhost:8081 (operator metrics `ticksTrade`, `ticksNonTrade`, `ticksPlaceholder`...)
 - Dashboard: http://localhost:8501
 
-Useful knobs (environment variables or `.env`): `TM_CPUS`, `TM_SLOTS`, `PARALLELISM`, `DAYS`,
-`SPEED` (for example `SPEED=60` replays an hour of market time per minute), `RATE` (events/s).
+Useful knobs (environment variables or `.env`): `TM_CPUS`, `TM_SLOTS`, `TM_MEMORY`, `PARALLELISM`,
+`DAYS`, `SPEED` (for example `SPEED=60` replays an hour of market time per minute), `RATE` (events/s),
+and `IMAGE_PREFIX` to run published images instead of building them.
+
+| Command | Starts |
+|---|---|
+| `docker compose --profile demo up -d --build` | everything, replaying a bundled slice (or `DEMO_INPUT=synthetic`), then checks the output |
+| `docker compose --profile app up -d --build` | everything, replaying the week from `./data` |
+| `docker compose up -d --build` | only Kafka and Flink, which is what the experiment scripts use |
 
 Step by step instead, for example to run the producer on the host:
 
@@ -168,11 +191,13 @@ analysis/        data exploration and the original answer-key scripts (pandas), 
 answer_key/      reference results (parquet)
 config/          subscribed symbols
 dashboard/       Streamlit dashboard (its light and dark theme is in .streamlit/config.toml)
+docs/            how to run and check it on another machine (TESTING.md), screenshots
 experiments/     experiment scripts and analysis
 flink-job/       the Flink job (Java 11, Flink 1.20), Dockerfile, run-local.sh
 producer/        Kafka producer
 report/          report skeleton (ACM template) and AI-use disclosure template
 results/         experiment output (preview-cloud/ holds a synthetic-data preview)
+scripts/         export-images.sh: pack the images into one file for another machine
 tools/           shared tick reader, reference, validator, synthetic data, topic dump
 ```
 
