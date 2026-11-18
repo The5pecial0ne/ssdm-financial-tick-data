@@ -19,6 +19,12 @@ public class TickEvent {
     public static final int MALFORMED = 3;
     /** End-of-stream marker sent by the producer, so the last windows get evaluated. */
     public static final int END_OF_STREAM = 4;
+    /**
+     * Start-of-stream marker the producer sends to every partition before the data. It wakes up
+     * partitions that were idle while the job waited for input, so none of them is left out of the
+     * watermark when the first trades arrive (see producer.py, announce_start).
+     */
+    public static final int START_OF_STREAM = 5;
 
     public String symbol;
     public String secType;

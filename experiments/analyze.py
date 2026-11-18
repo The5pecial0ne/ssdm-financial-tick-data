@@ -72,7 +72,7 @@ def subtask_records(job_json: Path, name_part="window") -> list[int]:
     return []
 
 
-def scalability(d: Path, lines: list[str]):
+def scalability(d: Path, lines: list[str], suffix: str = ""):
     runs = pd.read_csv(d / "runs.csv")
     runs = runs[runs["state"] == "FINISHED"].copy()
     events = json.loads((d / "producer.json").read_text())["events"]
@@ -106,13 +106,13 @@ def scalability(d: Path, lines: list[str]):
            title="Throughput vs cores", xticks=cores)
     ax.set_ylim(bottom=0)
     ax.legend()
-    figs = [save(fig, "scalability-throughput.png")]
+    figs = [save(fig, f"scalability-throughput{suffix}.png")]
 
     fig, ax = plt.subplots(figsize=(4.2, 3))
     ax.bar(cores, g["cpu_per_core_percent"], width=0.6, color=BLUE)
     ax.set(xlabel="TaskManager cores", ylabel="CPU used per core (%)", title="CPU utilisation",
            xticks=cores, ylim=(0, 105))
-    figs.append(save(fig, "scalability-cpu.png"))
+    figs.append(save(fig, f"scalability-cpu{suffix}.png"))
 
     maxc = int(cores.max())
     rec = subtask_records(d / f"job-c{maxc}-r1.json")
@@ -122,7 +122,7 @@ def scalability(d: Path, lines: list[str]):
         ax.axhline(np.mean(rec) / 1e6, color=MUTED, linestyle="--", linewidth=1.2)
         ax.set(xlabel="window operator instance", ylabel="million trades received",
                title=f"Load per parallel instance ({maxc} cores)", xticks=range(len(rec)))
-        figs.append(save(fig, "scalability-skew.png"))
+        figs.append(save(fig, f"scalability-skew{suffix}.png"))
         lines += [f"Window operator load at {maxc} cores: max/mean = {max(rec) / np.mean(rec):.2f} "
                   f"(1.00 = perfectly even). Per instance: {rec}", ""]
 
@@ -131,6 +131,21 @@ def scalability(d: Path, lines: list[str]):
         lines += ["Correctness of the Kafka-path output against the reference:", "", "```",
                   json.dumps({k: v[k] for k in v if not k.startswith("examples")}, indent=1), "```", ""]
     lines += [f"![]({p.relative_to(RESULTS)})" for p in figs] + [""]
+
+
+def scalability_overview(dirs: list[Path], lines: list[str]):
+    """One table across several scalability runs: what each replayed and how fast it went per core count."""
+    rows = []
+    for d in dirs:
+        settings = json.loads((d / "settings.json").read_text()) if (d / "settings.json").exists() else {}
+        events = json.loads((d / "producer.json").read_text())["events"]
+        for _, r in pd.read_csv(d / "summary.csv").iterrows():
+            rows.append({"run": d.name, "events_kind": settings.get("events", "?"),
+                         "exchanges": settings.get("exchanges", "all"), "events": events, "cores": int(r["cores"]),
+                         "seconds_mean": r["seconds_mean"], "throughput_mean": r["throughput_mean"],
+                         "speedup": r["speedup"], "tm_cpu_percent": r["tm_cpu_percent"]})
+    t = pd.DataFrame(rows)
+    lines += ["## Scalability across runs", "", t.round(3).to_markdown(index=False), ""]
 
 
 # ------------------------------------------------------------------ latency
@@ -222,7 +237,8 @@ def ooo(d: Path, lines: list[str]):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--scalability", type=Path)
+    ap.add_argument("--scalability", type=Path, nargs="+",
+                    help="one or more scalability runs, e.g. all trades, every event type, one exchange")
     ap.add_argument("--latency", type=Path, nargs="+",
                     help="one or more latency runs, e.g. the default and the tuned one")
     ap.add_argument("--ooo", type=Path)
@@ -239,6 +255,8 @@ def main():
             for d in given:
                 print(f"{kind}: {d}")
                 fn(d, lines, suffix=f"-{d.name}" if len(given) > 1 else "")
+            if kind == "scalability" and len(given) > 1:
+                scalability_overview(given, lines)
             continue
         d = given or newest(kind)
         if d:

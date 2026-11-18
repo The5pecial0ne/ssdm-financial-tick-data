@@ -1,0 +1,92 @@
+{
+  "windows_reference": 285579,
+  "windows_flink": 285575,
+  "windows_matched": 285575,
+  "windows_missing_in_flink": 4,
+  "windows_extra_in_flink": 0,
+  "symbols_reference": 4970,
+  "symbols_flink": 4970,
+  "windows_with_value_mismatch": 513,
+  "max_rel_error": {
+    "close": 0.0012343850293783374,
+    "ema38": 0.4891994237342465,
+    "ema100": 0.4973585346478683
+  },
+  "first_window_flag_mismatch": 4,
+  "signals_all": {
+    "expected": 4966,
+    "matched": 4966,
+    "missed": 0,
+    "spurious": 4,
+    "wrong_direction": 0
+  },
+  "signals_excluding_first_windows": {
+    "expected": 0,
+    "matched": 0,
+    "missed": 0,
+    "spurious": 4,
+    "wrong_direction": 0
+  },
+  "examples_missing": [
+    {
+      "symbol": "A0MEPS.ETR",
+      "window_start_ms": 1636358100000
+    },
+    {
+      "symbol": "ACCEL.NL",
+      "window_start_ms": 1636358100000
+    },
+    {
+      "symbol": "GHCGR.FR",
+      "window_start_ms": 1636358100000
+    },
+    {
+      "symbol": "IEDRI.FR",
+      "window_start_ms": 1636358100000
+    }
+  ],
+  "examples_extra": [],
+  "examples_value_mismatch": [
+    {
+      "symbol": "A0MENP.ETR",
+      "window_start_ms": 1636367100000,
+      "close_ref": 2.0253,
+      "close_flink": 2.0228,
+      "ema38_ref": 1.61938261014472,
+      "ema38_flink": 1.619254405016514
+    },
+    {
+      "symbol": "A0MENP.ETR",
+      "window_start_ms": 1636367400000,
+      "close_ref": 2.0233,
+      "close_flink": 2.0233,
+      "ema38_ref": 1.6400963224449907,
+      "ema38_flink": 1.6399746919387441
+    },
+    {
+      "symbol": "A0MENP.ETR",
+      "window_start_ms": 1636367700000,
+      "close_ref": 2.0347,
+      "close_flink": 2.0347,
+      "ema38_ref": 1.6603324084734528,
+      "ema38_flink": 1.660217015429065
+    },
+    {
+      "symbol": "A0MENP.ETR",
+      "window_start_ms": 1636368000000,
+      "close_ref": 2.03,
+      "close_flink": 2.03,
+      "ema38_ref": 1.6792897208594295,
+      "ema38_flink": 1.679180245407062
+    },
+    {
+      "symbol": "A0MENP.ETR",
+      "window_start_ms": 1636368300000,
+      "close_ref": 2.0435,
+      "close_flink": 2.0435,
+      "ema38_ref": 1.6979671710717663,
+      "ema38_flink": 1.697863309745161
+    }
+  ],
+  "passed": false
+}

@@ -2,8 +2,9 @@
 # so `docker compose up` gives a cluster that can run the job straight away.
 # Build context is the repo root (see docker-compose.yml), so config/ can be copied in.
 
-# ---- build the jar
-FROM maven:3.9.9-eclipse-temurin-17 AS build
+# ---- build the jar. The jar is the same on every CPU type, so this stage runs on the build
+# machine's own platform, even when the image is built for another one (no slow emulation).
+FROM --platform=$BUILDPLATFORM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /src
 COPY flink-job/pom.xml .
 RUN mvn -B -q dependency:go-offline

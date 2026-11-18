@@ -12,7 +12,7 @@ import org.apache.flink.util.Collector;
  */
 public class EventRouter extends ProcessFunction<TickEvent, TickEvent> {
 
-    private transient Counter trades, nonTrades, placeholders, malformed, endMarkers;
+    private transient Counter trades, nonTrades, placeholders, malformed, endMarkers, startMarkers;
 
     @Override
     public void open(Configuration parameters) {
@@ -21,6 +21,7 @@ public class EventRouter extends ProcessFunction<TickEvent, TickEvent> {
         placeholders = getRuntimeContext().getMetricGroup().counter("ticksPlaceholder");
         malformed = getRuntimeContext().getMetricGroup().counter("ticksMalformed");
         endMarkers = getRuntimeContext().getMetricGroup().counter("ticksEndOfStream");
+        startMarkers = getRuntimeContext().getMetricGroup().counter("ticksStartOfStream");
     }
 
     @Override
@@ -39,6 +40,10 @@ public class EventRouter extends ProcessFunction<TickEvent, TickEvent> {
             case TickEvent.END_OF_STREAM:
                 // Its only job was to push the watermark forward, which already happened at the source
                 endMarkers.inc();
+                break;
+            case TickEvent.START_OF_STREAM:
+                // Same: it only had to make its partition active at the source
+                startMarkers.inc();
                 break;
             default:
                 malformed.inc();

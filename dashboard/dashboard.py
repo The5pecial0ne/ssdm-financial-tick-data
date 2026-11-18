@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -95,26 +96,40 @@ def read_subscriptions() -> list[str]:
     return [l.strip() for l in f.read_text().splitlines() if l.strip() and not l.startswith("#")]
 
 
-@st.cache_resource
-def kafka_consumer(bootstrap: str, topic: str):
-    from confluent_kafka import Consumer
-    c = Consumer({"bootstrap.servers": bootstrap, "group.id": f"dashboard-{uuid.uuid4()}",
-                  "auto.offset.reset": "earliest", "enable.auto.commit": False})
-    c.subscribe([topic])
-    return c
+class KafkaFeed:
+    """Everything published to the results topic so far, read by one consumer for the whole server.
+
+    The consumer and the records it has read are shared by every browser tab, so reloading the page
+    or opening it on a second screen shows the full history, not just what arrived after it opened.
+    """
+
+    def __init__(self, bootstrap: str, topic: str):
+        from confluent_kafka import Consumer
+        self.consumer = Consumer({"bootstrap.servers": bootstrap, "group.id": f"dashboard-{uuid.uuid4()}",
+                                  "auto.offset.reset": "earliest", "enable.auto.commit": False})
+        self.consumer.subscribe([topic])
+        self.rows: list[dict] = []
+        self.frame = pd.DataFrame()
+        self.lock = threading.Lock()
+
+    def poll(self) -> pd.DataFrame:
+        """Reads whatever arrived since the last call (for at most 1.5 s) and returns all records."""
+        with self.lock:
+            fresh, deadline = [], time.time() + 1.5
+            while time.time() < deadline:
+                msgs = self.consumer.consume(5000, timeout=0.3)
+                if not msgs:
+                    break
+                fresh.extend(json.loads(m.value()) for m in msgs if not m.error())
+            if fresh:
+                self.rows.extend(fresh)
+                self.frame = normalise(pd.DataFrame(self.rows))
+            return self.frame
 
 
-def poll_kafka(bootstrap: str, topic: str) -> pd.DataFrame:
-    """Adds whatever arrived since the last refresh to the session's records."""
-    c = kafka_consumer(bootstrap, topic)
-    rows = st.session_state.setdefault("rows", [])
-    deadline = time.time() + 1.5
-    while time.time() < deadline:
-        msgs = c.consume(5000, timeout=0.3)
-        if not msgs:
-            break
-        rows.extend(json.loads(m.value()) for m in msgs if not m.error())
-    return normalise(pd.DataFrame(rows)) if rows else pd.DataFrame()
+@st.cache_resource(show_spinner=False)
+def kafka_feed(bootstrap: str, topic: str) -> KafkaFeed:
+    return KafkaFeed(bootstrap, topic)
 
 
 # ------------------------------------------------------------------ small helpers
@@ -338,7 +353,7 @@ def render(df: pd.DataFrame, source_badge: str, show_warmup_signals: bool):
         st.dataframe(view.style.map(lambda v: f"color: {tint.get(v, 'inherit')}; font-weight: 600",
                                     subset=["advisory"]),
                      hide_index=True, height=table_height, width="stretch",
-                     column_config={"window": st.column_config.DatetimeColumn("Window", format="ddd HH:mm", width="small"),
+                     column_config={"window": st.column_config.DatetimeColumn("Window", format="ddd HH:mm"),
                                     "symbol": st.column_config.TextColumn("Symbol"),
                                     "advisory": st.column_config.TextColumn("Advisory", width="small"),
                                     "close": st.column_config.NumberColumn("Close", format="%.4f")})
@@ -428,7 +443,7 @@ def main():
         def live():
             badge = f":green-badge[:material/sensors: Live from {topic}]"
             try:
-                df = poll_kafka(bootstrap, topic)
+                df = kafka_feed(bootstrap, topic).poll()
             except Exception as e:  # broker not up yet, etc.
                 header(pd.DataFrame(), badge)
                 st.warning(f"Can't read {topic} from {bootstrap}: {e}", icon=":material/cloud_off:")
