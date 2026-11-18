@@ -13,7 +13,8 @@
 #   DAYS=weekdays        days to replay (see producer) EVENTS=trades  or "all" for every event type
 #   EXCHANGES=           e.g. FR to test one exchange  FROM= / TO=    time-of-day range, e.g. 08:00 / 12:00
 #   JOB_ARGS=            extra job options, e.g. "--buffer-timeout-ms 5"
-#   VALIDATE=1           compare the last run's output with the answer key (full weekdays + trades only)
+#   VALIDATE=1           compare the last run's output with the reference (the shipped answer key for
+#                        full weekdays, otherwise a reference computed for the same slice of the data)
 #   OUT=results/scalability/<timestamp>
 source "$(dirname "$0")/common.sh"
 
@@ -63,7 +64,8 @@ done
 if [[ "$VALIDATE" == "1" ]]; then
   log "checking the last run's output against the reference"
   $PY -m tools.dump_topic ema-results "$OUT/flink-output.jsonl" --idle 10
-  if [[ "$DAYS" == "weekdays" && "$EVENTS${EXCHANGES:-}${FROM:-}${TO:-}" == "trades" ]]; then
+  # Quotes and housekeeping events never reach a window, so EVENTS=all has the same answer key as trades
+  if [[ "$DAYS" == "weekdays" && -z "${EXCHANGES:-}${FROM:-}${TO:-}" ]]; then
     $PY -m tools.validate --flink "$OUT/flink-output.jsonl" --answer-key answer_key/answer-key-week.parquet \
       --report "$OUT/validation.json" || true
   else

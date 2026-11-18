@@ -1,13 +1,17 @@
-# The whole system: Kafka, a Flink cluster with the job baked in, and (profile "app")
-# the job submission, producer and dashboard.
+# The whole system: Kafka, a Flink cluster with the job baked in, the producer and the dashboard.
 #
-#   docker compose up -d --build                 # Kafka + Flink, topics created
-#   docker compose --profile app up -d --build   # ...plus submit the job, replay the data, dashboard
+#   docker compose --profile demo up -d --build   # no download needed: replays a bundled slice of the real
+#                                                 # data, checks Flink's output against the reference,
+#                                                 # and serves the dashboard (see docs/TESTING.md)
+#   docker compose --profile app up -d --build    # the real thing: replays the week from ./data
+#   docker compose up -d --build                  # only Kafka + Flink, for the experiment scripts
 #
 # Tunables (environment variables, or put them in a .env file):
-#   TM_CPUS / TM_SLOTS   CPU cores and task slots of the TaskManager (default 4 / 4)
+#   TM_CPUS / TM_SLOTS   CPU cores and task slots of the TaskManager (default: no CPU cap / 4 slots)
 #   PARALLELISM          parallelism of the submitted job (default 4)
-#   DAYS, SPEED          what the producer replays and how fast (see producer/producer.py)
+#   DAYS, SPEED, RATE    what the producer replays and how fast (see producer/producer.py)
+#   DEMO_INPUT           what the demo replays: "slice" (real data, default) or "synthetic" (2M events)
+#   IMAGE_PREFIX         e.g. ghcr.io/<owner>/ to run prebuilt images instead of building them
 
 x-flink-env: &flink-env
   FLINK_PROPERTIES: |
@@ -67,7 +71,7 @@ services:
 
   jobmanager:
     build: *flink-build
-    image: ssdm-flink:1.0
+    image: ${IMAGE_PREFIX:-}ssdm-flink:${IMAGE_TAG:-1.0}
     container_name: jobmanager
     command: jobmanager
     ports:
@@ -76,23 +80,27 @@ services:
 
   taskmanager:
     build: *flink-build
-    image: ssdm-flink:1.0
+    image: ${IMAGE_PREFIX:-}ssdm-flink:${IMAGE_TAG:-1.0}
     container_name: taskmanager
     command: taskmanager
     depends_on:
       - jobmanager
-    cpus: ${TM_CPUS:-4}
+    # 0 = no cap, so the stack also starts on machines with fewer than 4 cores.
+    # The experiment scripts set TM_CPUS to pin the TaskManager to 1, 2 or 4 cores.
+    cpus: ${TM_CPUS:-0}
     environment: *flink-env
 
-  # ---- profile "app": the end-to-end demo
+  # ---- profiles "app" and "demo": submit the job, feed it, show the results
 
   job:
     build: *flink-build
-    image: ssdm-flink:1.0
-    profiles: ["app"]
+    image: ${IMAGE_PREFIX:-}ssdm-flink:${IMAGE_TAG:-1.0}
+    profiles: ["app", "demo"]
     depends_on:
-      - taskmanager
-      - kafka-init
+      taskmanager:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
@@ -103,21 +111,74 @@ services:
 
   producer:
     build: .
-    image: ssdm-python:1.0
+    image: ${IMAGE_PREFIX:-}ssdm-python:${IMAGE_TAG:-1.0}
     profiles: ["app"]
     depends_on:
-      - job
+      job:
+        condition: service_completed_successfully
     volumes:
       - ./data:/app/data:ro
     command: >
-      bash -c "sleep 20 && python producer/producer.py --bootstrap kafka:29092
-      --days ${DAYS:-weekdays} --speed ${SPEED:-0} --rate ${RATE:-0}"
+      python producer/producer.py --bootstrap kafka:29092
+      --days ${DAYS:-weekdays} --speed ${SPEED:-0} --rate ${RATE:-0}
+    restart: "no"
+
+  # The demo replays data that ships inside the image, so it runs without downloading anything.
+  # "slice" is a real excerpt of the DEBS 2022 data (two busy Frankfurt symbols, Monday and Tuesday);
+  # "synthetic" is three generated days (Mon to Wed, 700,000 events each) in the same layout, with a
+  # long tail of symbols, quotes, placeholder times and out-of-order trades (tools/synth.py).
+  demo-producer:
+    build: .
+    image: ${IMAGE_PREFIX:-}ssdm-python:${IMAGE_TAG:-1.0}
+    profiles: ["demo"]
+    depends_on:
+      job:
+        condition: service_completed_successfully
+    volumes:
+      - demo:/demo
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ "${DEMO_INPUT:-slice}" = synthetic ]; then
+          FILES=""
+          for d in 08 09 10; do
+            python -m tools.synth -n 700000 --date $$d-11-2021 --seed $$d -o /demo/synthetic-$$d.csv
+            FILES="$$FILES /demo/synthetic-$$d.csv"
+          done
+        else
+          cp analysis/test-slice.csv /demo/slice.csv
+          FILES=/demo/slice.csv
+        fi
+        echo $$FILES > /demo/inputs.txt
+        python producer/producer.py --bootstrap kafka:29092 $$(printf -- '--file %s ' $$FILES) --rate ${RATE:-0}
+    restart: "no"
+
+  # Reads what Flink published and compares it, window by window, with the pandas reference
+  verify:
+    build: .
+    image: ${IMAGE_PREFIX:-}ssdm-python:${IMAGE_TAG:-1.0}
+    profiles: ["demo"]
+    depends_on:
+      demo-producer:
+        condition: service_completed_successfully
+    volumes:
+      - demo:/demo
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        python -m tools.dump_topic ema-results /demo/flink.jsonl --bootstrap kafka:29092 --idle 20 --wait-first 180
+        python -m tools.validate --flink /demo/flink.jsonl $$(printf -- '--csv %s ' $$(cat /demo/inputs.txt)) --symbols-from-flink
+        echo "Dashboard: http://localhost:8501   Flink UI: http://localhost:8081"
     restart: "no"
 
   dashboard:
     build: .
-    image: ssdm-python:1.0
-    profiles: ["app"]
+    image: ${IMAGE_PREFIX:-}ssdm-python:${IMAGE_TAG:-1.0}
+    profiles: ["app", "demo"]
     depends_on:
       - kafka
     environment:
@@ -125,3 +186,6 @@ services:
     ports:
       - "8501:8501"
     command: streamlit run dashboard/dashboard.py --server.port 8501 --server.address 0.0.0.0
+
+volumes:
+  demo:

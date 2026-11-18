@@ -11,7 +11,7 @@ import java.time.LocalDate;
  *   <li>the raw DEBS 2022 CSV row (39 columns), so the job can read the original day files directly;</li>
  *   <li>the compact row our producer sends to Kafka: {@code ID,SecType,Date,Time,TradingTime,Last,seq}.</li>
  * </ul>
- * The producer marks the end of a replay with {@code #EOS,<epoch ms>}.
+ * The producer marks the start and end of a replay with {@code #SOS,<epoch ms>} and {@code #EOS,<epoch ms>}.
  *
  * Timestamps are parsed by hand rather than with DateTimeFormatter, because this runs
  * once per event and the formatter is surprisingly slow at hundreds of thousands of events a second.
@@ -33,9 +33,10 @@ public class TickParser implements Serializable {
         TickEvent e = new TickEvent();
         e.ingestTs = ingestTs;
 
-        if (line.startsWith("#EOS")) {
-            e.kind = TickEvent.END_OF_STREAM;
-            e.symbol = "#EOS";
+        if (line.startsWith("#EOS") || line.startsWith("#SOS")) {
+            boolean end = line.startsWith("#EOS");
+            e.kind = end ? TickEvent.END_OF_STREAM : TickEvent.START_OF_STREAM;
+            e.symbol = end ? "#EOS" : "#SOS";
             int comma = line.indexOf(',');
             e.eventTs = comma > 0 ? Long.parseLong(line.substring(comma + 1).trim()) : Long.MAX_VALUE / 2;
             return e;

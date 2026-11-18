@@ -1,0 +1,84 @@
+{
+  "windows_reference": 285579,
+  "windows_flink": 285577,
+  "windows_matched": 285577,
+  "windows_missing_in_flink": 2,
+  "windows_extra_in_flink": 0,
+  "symbols_reference": 4970,
+  "symbols_flink": 4970,
+  "windows_with_value_mismatch": 227,
+  "max_rel_error": {
+    "close": 2.2186711123604248e-16,
+    "ema38": 0.48835667193020044,
+    "ema100": 0.4965153897546087
+  },
+  "first_window_flag_mismatch": 2,
+  "signals_all": {
+    "expected": 4968,
+    "matched": 4968,
+    "missed": 0,
+    "spurious": 2,
+    "wrong_direction": 0
+  },
+  "signals_excluding_first_windows": {
+    "expected": 0,
+    "matched": 0,
+    "missed": 0,
+    "spurious": 2,
+    "wrong_direction": 0
+  },
+  "examples_missing": [
+    {
+      "symbol": "A0C4CK.ETR",
+      "window_start_ms": 1636358100000
+    },
+    {
+      "symbol": "INBGX.NL",
+      "window_start_ms": 1636358100000
+    }
+  ],
+  "examples_extra": [],
+  "examples_value_mismatch": [
+    {
+      "symbol": "A0C4CK.ETR",
+      "window_start_ms": 1636358400000,
+      "close_ref": 9.8842,
+      "close_flink": 9.8842,
+      "ema38_ref": 0.9906941485864562,
+      "ema38_flink": 0.506882051282051
+    },
+    {
+      "symbol": "A0C4CK.ETR",
+      "window_start_ms": 1636358700000,
+      "close_ref": 9.9382,
+      "close_flink": 9.9382,
+      "ema38_ref": 1.4495406025050994,
+      "ema38_flink": 0.990539381985535
+    },
+    {
+      "symbol": "A0C4CK.ETR",
+      "window_start_ms": 1636359000000,
+      "close_ref": 10.0295,
+      "close_flink": 10.0295,
+      "ema38_ref": 1.8895385203253507,
+      "ema38_flink": 1.454075823934995
+    },
+    {
+      "symbol": "A0C4CK.ETR",
+      "window_start_ms": 1636359300000,
+      "close_ref": 9.919,
+      "close_flink": 9.919,
+      "ema38_ref": 2.3013057756932813,
+      "ema38_flink": 1.8881744996306362
+    },
+    {
+      "symbol": "A0C4CK.ETR",
+      "window_start_ms": 1636359600000,
+      "close_ref": 9.9445,
+      "close_flink": 9.9445,
+      "ema38_ref": 2.6932644538628563,
+      "ema38_flink": 2.301319397085475
+    }
+  ],
+  "passed": false
+}
