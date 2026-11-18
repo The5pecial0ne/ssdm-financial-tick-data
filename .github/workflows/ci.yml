@@ -1,0 +1,32 @@
+name: correctness
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Unit tests and build
+        run: mvn -B -f flink-job/pom.xml package
+      - name: Test slice matches the reference exactly
+        run: |
+          ./flink-job/run-local.sh analysis/test-slice.csv results/ci/test-slice.jsonl
+          python -m tools.validate --flink results/ci/test-slice.jsonl --csv analysis/test-slice.csv
+      - name: Synthetic stress test (1M events, long tail, out-of-order, placeholders, quotes)
+        run: |
+          python -m tools.synth -n 1000000 -o results/ci/synthetic.csv
+          ./flink-job/run-local.sh results/ci/synthetic.csv results/ci/synthetic.jsonl --parallelism 4
+          python -m tools.validate --flink results/ci/synthetic.jsonl --csv results/ci/synthetic.csv

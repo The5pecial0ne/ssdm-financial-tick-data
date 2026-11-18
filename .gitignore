@@ -1,6 +1,8 @@
 **/target
 data/
 .venv/
+venv/
 .DS_Store
 analysis/*.png
-venv/
+results/ci/
+__pycache__/
