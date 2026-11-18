@@ -1,6 +1,7 @@
 package ssdm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.RichMapFunction;
@@ -49,6 +50,8 @@ import java.util.Properties;
  *   --idle-ms 10000           partitions quiet for this long stop holding back the watermark
  *   --subscriptions all|A,B|@file   symbols whose results get published
  *   --parallelism N           operator parallelism (file mode; on a cluster pass -p to flink run)
+ *   --buffer-timeout-ms 100   network buffer flush timeout (lower = less latency, less throughput)
+ *   --watermark-interval-ms 200   how often watermarks are emitted
  *   --checkpoint-ms 0         turn on checkpointing (exactly-once state) every N ms
  */
 public class TradingJob {
@@ -62,6 +65,14 @@ public class TradingJob {
         env.getConfig().setGlobalJobParameters(p);
         if (p.has("parallelism")) {
             env.setParallelism(p.getInt("parallelism"));   // mainly for file mode; on a cluster use flink run -p
+        }
+        // Latency knobs: how long network buffers may wait to fill up, and how often watermarks are emitted.
+        // Smaller values cut latency at some cost in throughput (an experiment in run_latency.sh).
+        if (p.has("buffer-timeout-ms")) {
+            env.setBufferTimeout(p.getLong("buffer-timeout-ms"));
+        }
+        if (p.has("watermark-interval-ms")) {
+            env.getConfig().setAutoWatermarkInterval(p.getLong("watermark-interval-ms"));
         }
         if (p.getLong("checkpoint-ms", 0) > 0) {
             env.enableCheckpointing(p.getLong("checkpoint-ms"));
@@ -105,7 +116,13 @@ public class TradingJob {
             runFileMode(env, p, results, late);
         } else {
             publishToKafka(p, results, late, subs);
-            env.execute(p.get("job-name", "Trading trends"));
+            JobExecutionResult res = env.execute(p.get("job-name", "Trading trends"));
+            try {
+                // Only available when the client waited for the job (bounded local runs)
+                System.out.printf("Net runtime ms: %d%n", res.getNetRuntime());
+            } catch (RuntimeException detached) {
+                // submitted with flink run -d: the client doesn't know when the job ends
+            }
         }
     }
 

@@ -1,0 +1,35 @@
+# Symbols the platform subscribes to (spec 3.1, item 3). One per line; '#' starts a comment.
+# Every symbol is still computed; only these get results and advisories published.
+# Picked from the answer key: the 4 busiest per exchange, the 8 with most crossovers, and 6 quiet long-tail symbols.
+
+# busiest per exchange
+TCAMB.FR
+TCAMP.FR
+TCAMG.FR
+TCED5.FR
+ENVWN.NL
+ENVN.NL
+ENVG.NL
+WLENP.NL
+A169S8.ETR
+A1EXV9.ETR
+A1EXV7.ETR
+A1EXV6.ETR
+
+# most crossovers in the week
+EUS5P.NL
+I2SAD.FR
+I3HSB.NL
+IHSC3.FR
+A0X9EJ.ETR
+IUCEU.FR
+EUS5D.NL
+A13N91.ETR
+
+# long tail (20-60 windows in the week)
+540740.ETR
+A11873.ETR
+593273.ETR
+CLB.NL
+A2PFRC.ETR
+ALINV.FR

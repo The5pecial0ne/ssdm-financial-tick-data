@@ -1,0 +1,9 @@
+data/
+results/
+venv/
+.venv/
+**/target
+.git
+**/__pycache__
+analysis/*.csv
+!analysis/test-slice.csv
