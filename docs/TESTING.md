@@ -94,8 +94,9 @@ $env:DEMO_INPUT = "synthetic"; docker compose --profile demo up -d; Remove-Item 
 docker compose --profile demo logs -f verify
 ```
 
-This takes a few minutes and ends with `PASSED`: 5,683 windows of the subscribed symbols and 49
-advisories, all matching the reference.
+This takes a few minutes and ends with `PASSED`, with about 5,500 windows of the subscribed symbols
+and about 50 advisories, all matching the reference. The data is generated on the spot, so the exact
+counts can differ a little between machines with different library versions.
 
 ### Stop and clean up
 
