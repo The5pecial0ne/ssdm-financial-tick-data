@@ -1,0 +1,34 @@
+{
+  "windows_reference": 285579,
+  "windows_flink": 285579,
+  "windows_matched": 285579,
+  "windows_missing_in_flink": 0,
+  "windows_extra_in_flink": 0,
+  "symbols_reference": 4970,
+  "symbols_flink": 4970,
+  "windows_with_value_mismatch": 0,
+  "max_rel_error": {
+    "close": 2.2186711123604248e-16,
+    "ema38": 2.525246634911708e-13,
+    "ema100": 2.960816357864944e-13
+  },
+  "first_window_flag_mismatch": 0,
+  "signals_all": {
+    "expected": 4970,
+    "matched": 4970,
+    "missed": 0,
+    "spurious": 0,
+    "wrong_direction": 0
+  },
+  "signals_excluding_first_windows": {
+    "expected": 0,
+    "matched": 0,
+    "missed": 0,
+    "spurious": 0,
+    "wrong_direction": 0
+  },
+  "examples_missing": [],
+  "examples_extra": [],
+  "examples_value_mismatch": [],
+  "passed": true
+}

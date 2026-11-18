@@ -10,6 +10,11 @@
 #   ./experiments/run_ooo_sweep.sh
 #
 # Settings: DAY=08-11-21  BOUNDS="0 1000 5000 30000 120000" (ms)  PARALLELISM=4
+#           CSV=<file> to sweep another input instead of the real day, for example synthetic data with
+#           a known amount of disorder (that's how results/ooo-synthetic/ was made):
+#   python -m tools.synth -n 3000000 --out-of-order 0.02 --max-delay-ms 60000 -o data/synthetic-ooo.csv
+#   CSV=data/synthetic-ooo.csv OUT=results/ooo-synthetic/ooo-sweep/run \
+#     BOUNDS="0 1000 5000 15000 30000 60000 120000" ./experiments/run_ooo_sweep.sh
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"
@@ -18,11 +23,13 @@ DAY=${DAY:-08-11-21}
 BOUNDS=${BOUNDS:-"0 1000 5000 30000 120000"}
 PARALLELISM=${PARALLELISM:-4}
 OUT=${OUT:-results/ooo-sweep/$(date +%Y%m%d-%H%M%S)}
-CSV="data/debs2022-gc-trading-day-$DAY.csv"
+CSV=${CSV:-data/debs2022-gc-trading-day-$DAY.csv}
 mkdir -p "$OUT"
+printf '{"input": "%s", "bounds_ms": "%s", "parallelism": %s, "host": "%s", "cpus": %s}\n' \
+  "$CSV" "$BOUNDS" "$PARALLELISM" "$(uname -sm)" "$(getconf _NPROCESSORS_ONLN)" > "$OUT/settings.json"
 [[ -f "$CSV" ]] || { echo "missing $CSV (see README, 'Get the data')"; exit 1; }
 
-echo "computing the reference for $DAY once ..."
+echo "computing the reference for $(basename "$CSV") once ..."
 $PY -m tools.reference --file "$CSV" -o "$OUT/reference.parquet"
 
 echo "bound_ms,seconds,late_trades,passed" > "$OUT/sweep.csv"

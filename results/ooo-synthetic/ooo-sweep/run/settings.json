@@ -1,0 +1,1 @@
+{"input": "data/synthetic-ooo.csv", "bounds_ms": "0 1000 5000 15000 30000 60000 120000", "parallelism": 4, "host": "Linux x86_64", "cpus": 4}
