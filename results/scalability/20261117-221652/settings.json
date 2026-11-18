@@ -1,0 +1,4 @@
+{"cores": "1 2 4", "repeats": 3, "days": "weekdays", "events": "trades",
+ "exchanges": "all", "from": "", "to": "",
+ "host": "Darwin arm64", "docker_cpus": "10",
+ "docker_mem_bytes": "8319504384"}

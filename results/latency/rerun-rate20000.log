@@ -1,0 +1,240 @@
+
+[23:06:21] starting Kafka and Flink (first run builds the images, a few minutes)
+ Image ssdm-flink:1.0 Building 
+ Image ssdm-flink:1.0 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.15kB done
+#1 DONE 0.0s
+
+#2 [taskmanager internal] load build definition from Dockerfile
+#2 transferring dockerfile: 640B done
+#2 DONE 0.0s
+
+#3 [jobmanager internal] load metadata for docker.io/library/maven:3.9.9-eclipse-temurin-17
+#3 ...
+
+#4 [auth] library/maven:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [auth] library/flink:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [jobmanager internal] load metadata for docker.io/library/flink:1.20.0-java17
+#6 DONE 0.9s
+
+#3 [jobmanager internal] load metadata for docker.io/library/maven:3.9.9-eclipse-temurin-17
+#3 DONE 0.9s
+
+#7 [taskmanager internal] load .dockerignore
+#7 transferring context: 138B done
+#7 DONE 0.0s
+
+#8 [jobmanager internal] load build context
+#8 transferring context: 1.28kB done
+#8 DONE 0.0s
+
+#9 [jobmanager stage-1 1/3] FROM docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e
+#9 resolve docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e done
+#9 DONE 0.0s
+
+#10 [taskmanager build 1/6] FROM docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc
+#10 resolve docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc done
+#10 DONE 0.0s
+
+#11 [taskmanager build 3/6] COPY flink-job/pom.xml .
+#11 CACHED
+
+#12 [taskmanager build 4/6] RUN mvn -B -q dependency:go-offline
+#12 CACHED
+
+#13 [taskmanager build 5/6] COPY flink-job/src ./src
+#13 CACHED
+
+#14 [taskmanager build 6/6] RUN mvn -B -q package -DskipTests
+#14 CACHED
+
+#15 [taskmanager build 2/6] WORKDIR /src
+#15 CACHED
+
+#16 [taskmanager stage-1 2/3] COPY --from=build /src/target/flink-job-1.0.jar /opt/ssdm/trading-job.jar
+#16 CACHED
+
+#17 [jobmanager stage-1 3/3] COPY config/ /opt/ssdm/config/
+#17 CACHED
+
+#18 [taskmanager] exporting to image
+#18 exporting layers done
+#18 exporting manifest sha256:6b88bb331752a7290ff0c75ce69860d1deb0da29a6819ead67bbb2ffb21950d7 done
+#18 exporting config sha256:bf81acfe52986a18df29931c714c4995cfe57e0c4b4e09d34d7703e35245f703 done
+#18 exporting attestation manifest sha256:51663a8b7331ca4b3f7aa0ce74f358c581b169b0982f220098d0fae036407374 done
+#18 exporting manifest list sha256:1e5073b40e04c29f3e1b0a02fd3bc7ea41d1fa99c479c6a837755f027f32acad done
+#18 naming to docker.io/library/ssdm-flink:1.0 done
+#18 unpacking to docker.io/library/ssdm-flink:1.0 done
+#18 DONE 0.0s
+
+#19 [jobmanager] exporting to image
+#19 exporting layers done
+#19 exporting manifest sha256:292100bcfbe09cfc8bcd1cf58d58a7bdb8374edaf7166f81b673af90537bb11b done
+#19 exporting config sha256:1115c509a1bc8a8e6b38b43738d51a9185febcc589d3189f8e8b23b4de5d19b7 done
+#19 exporting attestation manifest sha256:2b7cab59bc97d2c9cd75a3ae642b5299e3365855f93e33a8cc53ed6a6cdbb592 done
+#19 exporting manifest list sha256:ea8bde603b000bcd29e11ed1c4cd7470913a8532b535c853906b552f6a4edde8 done
+#19 naming to docker.io/library/ssdm-flink:1.0 done
+#19 unpacking to docker.io/library/ssdm-flink:1.0 done
+#19 DONE 0.1s
+
+#20 [taskmanager] resolving provenance for metadata file
+#20 DONE 0.0s
+
+#21 [jobmanager] resolving provenance for metadata file
+#21 DONE 0.0s
+ Image ssdm-flink:1.0 Built 
+ Image ssdm-flink:1.0 Built 
+ Container kafka Running 
+ Container jobmanager Recreate 
+ Container ssdm-financial-tick-data-kafka-init-1 Recreate 
+ Container ssdm-financial-tick-data-kafka-init-1 Recreated 
+ Container jobmanager Recreated 
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container kafka Waiting 
+ Container jobmanager Starting 
+ Container jobmanager Started 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+ Container kafka Healthy 
+ Container ssdm-financial-tick-data-kafka-init-1 Starting 
+ Container ssdm-financial-tick-data-kafka-init-1 Started 
+
+[23:06:27] TaskManager: 4 core(s), 4 slot(s)
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+
+[23:06:29] latency run: 4 core(s), rate 20000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 150.0s (19,997 events/s)
+wrote 96,765 records from ema-results to /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-default/results-c4-rate20000.jsonl
+./experiments/common.sh: line 80: 54564 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[23:09:29] done: /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-default  (next: python -m experiments.analyze)
+RC default 0
+
+[23:10:29] starting Kafka and Flink (first run builds the images, a few minutes)
+ Image ssdm-flink:1.0 Building 
+ Image ssdm-flink:1.0 Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.15kB done
+#1 DONE 0.0s
+
+#2 [taskmanager internal] load build definition from Dockerfile
+#2 transferring dockerfile: 640B done
+#2 DONE 0.0s
+
+#3 [taskmanager internal] load metadata for docker.io/library/flink:1.20.0-java17
+#3 DONE 0.5s
+
+#4 [jobmanager internal] load metadata for docker.io/library/maven:3.9.9-eclipse-temurin-17
+#4 DONE 0.5s
+
+#5 [taskmanager internal] load .dockerignore
+#5 transferring context: 138B done
+#5 DONE 0.0s
+
+#6 [jobmanager internal] load build context
+#6 transferring context: 1.28kB done
+#6 DONE 0.0s
+
+#7 [jobmanager stage-1 1/3] FROM docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e
+#7 resolve docker.io/library/flink:1.20.0-java17@sha256:b46dcc4c70cde81859ef0daa2210a4c2f7bb3f96eb0fee5c9a1229f95176551e 0.0s done
+#7 DONE 0.0s
+
+#8 [jobmanager build 1/6] FROM docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc
+#8 resolve docker.io/library/maven:3.9.9-eclipse-temurin-17@sha256:f58d59b6273e785ac0a4477f6e9b5ba1d7731c75b906c0f7b34076f1851318cc 0.0s done
+#8 DONE 0.0s
+
+#9 [jobmanager build 5/6] COPY flink-job/src ./src
+#9 CACHED
+
+#10 [jobmanager stage-1 2/3] COPY --from=build /src/target/flink-job-1.0.jar /opt/ssdm/trading-job.jar
+#10 CACHED
+
+#11 [jobmanager build 3/6] COPY flink-job/pom.xml .
+#11 CACHED
+
+#12 [jobmanager build 2/6] WORKDIR /src
+#12 CACHED
+
+#13 [jobmanager build 6/6] RUN mvn -B -q package -DskipTests
+#13 CACHED
+
+#14 [jobmanager build 4/6] RUN mvn -B -q dependency:go-offline
+#14 CACHED
+
+#15 [jobmanager stage-1 3/3] COPY config/ /opt/ssdm/config/
+#15 CACHED
+
+#16 [jobmanager] exporting to image
+#16 exporting layers done
+#16 exporting manifest sha256:292100bcfbe09cfc8bcd1cf58d58a7bdb8374edaf7166f81b673af90537bb11b done
+#16 exporting config sha256:1115c509a1bc8a8e6b38b43738d51a9185febcc589d3189f8e8b23b4de5d19b7 done
+#16 exporting attestation manifest sha256:c9355ab0364977643b7f2adc450fb5d6d48714821c18f60a9b15d75d1f4c1fa0 done
+#16 exporting manifest list sha256:22554710ea2482dab59bf0960820405c4832072f9d345b455ba468afadb0dc7d done
+#16 naming to docker.io/library/ssdm-flink:1.0 done
+#16 unpacking to docker.io/library/ssdm-flink:1.0 done
+#16 DONE 0.0s
+
+#17 [taskmanager] exporting to image
+#17 exporting layers done
+#17 exporting manifest sha256:6b88bb331752a7290ff0c75ce69860d1deb0da29a6819ead67bbb2ffb21950d7 done
+#17 exporting config sha256:bf81acfe52986a18df29931c714c4995cfe57e0c4b4e09d34d7703e35245f703 done
+#17 exporting attestation manifest sha256:db9be26503736319b7f8fa01a14d5920c166e2a723777efe80b0c551536f5acf done
+#17 exporting manifest list sha256:3b851b949d2e97c8680afc88d9fc9ce3be1c0a3f5fcd21ca4fe9e55b3aa3aade done
+#17 naming to docker.io/library/ssdm-flink:1.0 done
+#17 unpacking to docker.io/library/ssdm-flink:1.0 done
+#17 DONE 0.1s
+
+#18 [jobmanager] resolving provenance for metadata file
+#18 DONE 0.0s
+
+#19 [taskmanager] resolving provenance for metadata file
+#19 DONE 0.0s
+ Image ssdm-flink:1.0 Built 
+ Image ssdm-flink:1.0 Built 
+ Container kafka Running 
+ Container jobmanager Recreate 
+ Container jobmanager Recreated 
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container kafka Waiting 
+ Container jobmanager Starting 
+ Container jobmanager Started 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+ Container kafka Healthy 
+ Container ssdm-financial-tick-data-kafka-init-1 Starting 
+ Container ssdm-financial-tick-data-kafka-init-1 Started 
+
+[23:10:34] TaskManager: 4 core(s), 4 slot(s)
+ Container taskmanager Recreate 
+ Container taskmanager Recreated 
+ Container taskmanager Starting 
+ Container taskmanager Started 
+
+[23:10:36] latency run: 4 core(s), rate 20000 events/s
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+WARNING: Unknown module: jdk.compiler specified to --add-exports
+sent 3,000,000 events in 150.0s (19,997 events/s)
+wrote 96,765 records from ema-results to /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-tuned/results-c4-rate20000.jsonl
+./experiments/common.sh: line 80: 54993 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
+
+[23:13:35] done: /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-tuned  (next: python -m experiments.analyze)
+RC tuned 0
+RERUN DONE secs=434
