@@ -7,6 +7,8 @@
 #
 # Any other job options (for example against a Kafka broker on localhost):
 #   ./flink-job/run-local.sh -- --bootstrap localhost:9092 --bounded --parallelism 4
+#
+# Works on Linux and macOS, and on Windows from Git Bash or WSL.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -29,11 +31,18 @@ if [[ ! -f target/classpath.txt || pom.xml -nt target/classpath.txt ]]; then
 fi
 cd - >/dev/null
 
+# Java on Windows wants C:\... paths joined with ';' (Maven already wrote classpath.txt that way)
+jar="$here/target/flink-job-1.0.jar" sep=":"
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) jar="$(cygpath -w "$jar")" sep=";" ;;
+esac
+py=$(command -v python3 || command -v python)
+
 run() {
   java ${JAVA_OPTS:--Xmx2g} \
     --add-opens java.base/java.util=ALL-UNNAMED \
     --add-opens java.base/java.lang=ALL-UNNAMED \
-    -cp "$here/target/flink-job-1.0.jar:$(cat "$here/target/classpath.txt")" \
+    -cp "$jar$sep$(cat "$here/target/classpath.txt")" \
     ssdm.TradingJob "$@"
 }
 
@@ -42,6 +51,6 @@ if [[ $mode == args ]]; then
 else
   mkdir -p "$(dirname "$output")"
   # Absolute paths, because Flink's file source resolves relative ones on its own terms
-  abs_inputs=$(python3 -c 'import os,sys; print(",".join(os.path.abspath(x) for x in sys.argv[1].split(",")))' "$input")
+  abs_inputs=$("$py" -c 'import os,sys; print(",".join(os.path.abspath(x) for x in sys.argv[1].split(",")))' "$input")
   run --input-file "$abs_inputs" --output-file "$output" "$@"
 fi

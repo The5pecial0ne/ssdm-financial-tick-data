@@ -1,0 +1,15 @@
+# Keep Unix line endings on the files that run inside Linux containers or under bash, even when the
+# repository is cloned on Windows (where Git otherwise turns LF into CRLF and breaks the scripts).
+# Data files (.csv, .jsonl) are left byte for byte as they are.
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.txt text eol=lf
+*.py text eol=lf
+*.csv -text
+*.jsonl -text
+*.png binary
+*.parquet binary
+*.jar binary
