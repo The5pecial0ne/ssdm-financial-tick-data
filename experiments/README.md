@@ -9,7 +9,7 @@ newest run of each into figures (`results/figures/`) and tables (`results/summar
 | `run_scalability.sh` | How does processing time change with 1, 2, 4 cores? How evenly is the load spread (long tail)? Is the Kafka-path output correct for the full week? | Scalability, Performance, Functionality, Evaluation | Docker, data |
 | `run_latency.sh` | How long from a window closing to its advisory, at different input rates? | Performance (latency under load) | Docker, data |
 | `run_ooo_sweep.sh` | What does the out-of-order bound cost in latency, and what does it buy in correctness? | Creative exploration (trade-off backed by measurements) | Java + Maven, data |
-| `run_remaining.sh` | Every event type, and each exchange on its own, at 1, 2 and 4 cores, then the overview table | Scalability (event volumes, exchanges) | Docker, data |
+| `run_remaining.sh` | 6 and 8 cores, every event type, each exchange on its own, and latency with no out-of-order slack, then the overview table | Scalability (resources, event volumes, exchanges), Creative exploration | Docker, data |
 | `run_local_preview.sh` | Same as scalability, without Docker (Linux only) | | Kafka on localhost |
 
 ## Before you start (MacBook)
@@ -45,12 +45,13 @@ EXCHANGES=ETR DAYS=08-11-21 ./experiments/run_scalability.sh
 DAYS=08-11-21 FROM=08:00 TO=12:00 REPEATS=1 ./experiments/run_scalability.sh
 ```
 
-For the whole week, one script chains the every-event-type run (about 289 million events) and the
-three per-exchange runs, each validated, and then regenerates the tables with an overview of all
-runs. It takes about 3 hours on a MacBook, so it suits an overnight run:
+One script chains the runs that are still missing: the trades week at 1, 2, 4, 6 and 8 cores, the
+every-event-type week (about 289 million events), the three per-exchange runs, each validated, and a
+latency run with an out-of-order bound of 0. It then regenerates the tables with an overview of all
+runs. It takes 1 to 3 hours on a MacBook, so it suits an overnight run:
 
 ```bash
-./experiments/run_remaining.sh          # SKIP_ALL_EVENTS=1 or SKIP_EXCHANGES=1 leaves a part out
+./experiments/run_remaining.sh   # SKIP_MORE_CORES=1, SKIP_ALL_EVENTS=1, SKIP_EXCHANGES=1, SKIP_LATENCY=1 leave a part out
 ```
 
 Runs over the whole week without exchange or time filters are checked against the shipped answer
