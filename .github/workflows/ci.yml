@@ -6,6 +6,7 @@ on:
 
 jobs:
   test:
+    name: Correctness (file mode, Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,3 +31,62 @@ jobs:
           python -m tools.synth -n 1000000 -o results/ci/synthetic.csv
           ./flink-job/run-local.sh results/ci/synthetic.csv results/ci/synthetic.jsonl --parallelism 4
           python -m tools.validate --flink results/ci/synthetic.jsonl --csv results/ci/synthetic.csv
+
+  # What a grader does on a fresh Linux machine: build the images, run the demo, read the verdict.
+  docker:
+    name: Docker demo on a clean Linux machine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the images
+        run: docker compose --profile demo build
+      - name: Real-data demo (bundled slice), through Kafka and Flink, checked against the reference
+        run: |
+          docker compose --profile demo up -d
+          docker compose --profile demo logs verify
+          test "$(docker compose --profile demo wait verify)" = 0
+      - name: Dashboard answers
+        run: |
+          for i in $(seq 30); do curl -sf http://localhost:8501/_stcore/health && break; sleep 2; done
+          curl -sf http://localhost:8501/ >/dev/null && echo "dashboard is up"
+      - name: Synthetic demo (3 days, 2.1M events, out-of-order trades), same check
+        run: |
+          docker compose --profile demo down --volumes
+          DEMO_INPUT=synthetic docker compose --profile demo up -d
+          docker compose --profile demo logs verify
+          test "$(docker compose --profile demo wait verify)" = 0
+      - name: Logs, if something failed
+        if: failure()
+        run: docker compose --profile demo logs --tail 200
+
+  # The no-Docker quick start on Windows, with Git's default Windows line-ending conversion turned on
+  windows:
+    name: Quick start on Windows (Git Bash, no Docker)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - run: git config --global core.autocrlf true
+      - uses: actions/checkout@v4
+      - name: Scripts kept Unix line endings
+        run: |
+          if grep -rl $'\r' --include='*.sh' --include='*.yml' --include='Dockerfile' --include='*.txt' .; then
+            echo "these files have Windows line endings"; exit 1
+          fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Unit tests and build
+        run: mvn -B -f flink-job/pom.xml package
+      - name: Test slice matches the reference exactly
+        run: |
+          ./flink-job/run-local.sh analysis/test-slice.csv results/ci/test-slice.jsonl
+          python -m tools.validate --flink results/ci/test-slice.jsonl --csv analysis/test-slice.csv
