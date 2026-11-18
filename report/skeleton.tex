@@ -69,10 +69,12 @@
 
 \subsection{Correctness}
 % results/scalability/<run>/validation.json (full week vs answer key) and the OOO sweep.
+% The Docker demo checks itself the same way on any machine (docs/TESTING.md), and CI runs it on every push.
 
 \subsection{Throughput and Scalability}
 % results/figures/scalability-throughput.png, scalability-cpu.png, results/summary.md tables.
-% Per-exchange runs and event types (EVENTS=all) if you ran them.
+% Per-exchange runs and event types (EVENTS=all): experiments/run_remaining.sh, then the
+% "Scalability across runs" table in results/summary.md.
 % \begin{figure}[t]\includegraphics[width=\linewidth]{scalability-throughput}\caption{...}\end{figure}
 
 \subsection{Latency}
@@ -82,7 +84,8 @@
 % results/figures/scalability-skew.png (records per parallel instance).
 
 \subsection{Design Trade-off: Out-of-order Bound}
-% results/figures/ooo-late.png, ooo-windows.png.
+% results/figures/ooo-late.png, ooo-windows.png (real Monday), and results/ooo-synthetic/
+% (synthetic input with 2% of trades up to 60 s late, bounds 0 to 120 s).
 
 \section{Smart Visualization}
 % docs/dashboard.png: what the trader sees and why it is designed that way.
