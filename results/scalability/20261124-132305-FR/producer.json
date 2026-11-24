@@ -1,0 +1,20 @@
+{
+  "events": 21367417,
+  "seconds": 204.927,
+  "events_per_second": 104268,
+  "files": [
+    "/Users/manasvernekar/Documents/Projects/ssdm-financial-tick-data/data/debs2022-gc-trading-day-08-11-21.csv",
+    "/Users/manasvernekar/Documents/Projects/ssdm-financial-tick-data/data/debs2022-gc-trading-day-09-11-21.csv",
+    "/Users/manasvernekar/Documents/Projects/ssdm-financial-tick-data/data/debs2022-gc-trading-day-10-11-21.csv",
+    "/Users/manasvernekar/Documents/Projects/ssdm-financial-tick-data/data/debs2022-gc-trading-day-11-11-21.csv",
+    "/Users/manasvernekar/Documents/Projects/ssdm-financial-tick-data/data/debs2022-gc-trading-day-12-11-21.csv"
+  ],
+  "events_kind": "trades",
+  "exchanges": "FR",
+  "from": null,
+  "to": null,
+  "rate": 0,
+  "speed": 0,
+  "topic": "ticks",
+  "start_wall_ms": 1795520601731
+}
