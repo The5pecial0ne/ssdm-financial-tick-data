@@ -242,6 +242,26 @@ Several design decisions were made during implementation to improve correctness,
 %%    at-least-once. Say why that is acceptable here, or what it would cost.
 %%  - Latency knobs: buffer timeout 100 ms -> 5 ms and watermark interval 200 ms -> 50 ms
 %%    (the "tuned" run, Table 4).
+%% Not covered anywhere in the text yet (full notes with alternatives and evidence in
+%% /mnt/project-files/submission/materials/design-decisions.md, D-numbers below):
+%%  - D1 Stack: Kafka + Flink vs Kafka Streams, Spark Structured Streaming, or one process.
+%%  - D3 Kafka key = symbol vs round robin (the October prototype had no key) or key by
+%%    exchange (3 keys). Partition sizes are uneven: 5.2-9.3 M trades, max/mean 1.26.
+%%  - D10 AggregateFunction (constant state per window) vs ProcessWindowFunction buffering
+%%    every trade. TaskManager memory peaked at 1.5-2.0 GB in every run.
+%%  - D11 Two keyed operators vs one KeyedProcessFunction with timers: the EMA task gets
+%%    1.86 M records against 59.4 M and is 75-83% idle.
+%%  - D17 Compact CSV + hand-written time parser vs JSON + DateTimeFormatter (October).
+%%  - D18 confluent-kafka producer vs kafka-python (~10x slower per the PR #2 note).
+%%  - D20 One TaskManager with cores/slots as a knob vs several TaskManagers. This is what
+%%    fixed the October NoResourceAvailableException (one slot).
+%%  - D24 Topic retention -1: Flink stamps output with 2021 event time, so default 7-day
+%%    retention deleted results mid-run (17 Nov latency runs lost windows).
+%%  - The design evolution from the October prototype (JSON, topic trading-events, no key,
+%%    watermarks after the source, reduce() without tie-break, 1,917-row test) to now is
+%%    a strong "what we changed and why" story; table in design-decisions.md.
+%% With 5 pages, pick the 3-4 strongest, ideally ones with a measurement (D3, D4/D5,
+%% D10/D11, D19) and say what you rejected.
 \todo{one short paragraph on what you rejected and why, see the fact sheet}
 
 \subsection{Data handling}
@@ -259,6 +279,19 @@ The input dataset consists of financial tick records containing the instrument i
 %% (apache/kafka:3.9.0), Dockerfile (python:3.11-slim). The draft said Kafka 3.x,
 %% Flink 1.20.5 and Java 11; 1.20.5 was the October prototype's cluster.
 The implementation uses Apache Kafka 3.9.0 (a single broker in KRaft mode), Apache Flink 1.20.0 running on Java 17, and Python 3.11. The Flink job is written in Java and built with Maven. The Kafka producer was implemented in Python (\texttt{confluent-kafka}) and used to replay historical financial tick data into the streaming system. Apache Flink was responsible for event-time window processing, EMA computation and signal generation. The whole system (Kafka, a Flink JobManager and TaskManager with the job built in, the producer and the dashboard) runs from one Docker Compose file. A pandas reference implementation computes the expected windows, EMAs and advisories independently, and a validator compares Flink's output with it window by window. For visualization, a Streamlit~\cite{streamlit} dashboard was developed to consume processed EMA results from Kafka and display trading signals and trend indicators.
+
+\subsection{Assumptions}
+%% Added: the semantic choices the results depend on, in one place (README "Semantics",
+%% TickParser, EmaProcessor). These are facts about what the code does; say in your own
+%% analysis which of them you consider debatable.
+The implementation rests on the following assumptions, which the reference implementation shares.
+(i)~Only trades enter the queries: an event is a trade when $\mathit{Last}>0$; quotes and housekeeping events have no price.
+(ii)~Event time is \textit{Date} plus \textit{Trading time}, read as UTC, so windows are $[k\cdot5\,\mathrm{min},(k+1)\cdot5\,\mathrm{min})$ counted from midnight. The receive time \textit{Time} is not used, because it is only precise to whole seconds.
+(iii)~The trading time \texttt{01:00:00.000} is a placeholder whose real time is unknown, so those trades are dropped (5,506 trades, all on Wednesday).
+(iv)~A window's close is its trade with the latest trading time; equal times are ordered by position in the source file.
+(v)~$\mathit{EMA}_{s,w_0}=0$, a window without trades leaves the EMAs unchanged, and the resulting first-window buy advisory is emitted but flagged.
+(vi)~EMAs are computed for every symbol; only symbols in the subscription list (26 in the default configuration, \texttt{config/subscriptions.txt}) are published.
+(vii)~Trades more than the out-of-order bound (5\,s of event time) behind the watermark are treated as late and set aside, not merged into a window that has already fired.
 
 \subsection{Query 1: EMA over tumbling windows}
 For every symbol $s$ and window $w_i$, we take the last price observed in the
@@ -432,6 +465,17 @@ Table~\ref{tab:scal} and Figure~\ref{fig:scal} show the processing time for the 
 %%     (hash partitioning). With 1 instance that traffic is local.
 %%  g) Quotes are dropped right after the source, so for the all-events run the extra
 %%     work is parsing; parsing scales with source instances (again partitions).
+%% Measured evidence for (a), (b) and (f), from results/*/job-*.json and docker stats
+%% (materials/facts/derived-facts.md):
+%%  - Source subtasks at 6 cores read 15.2, 16.6, 8.2, 8.3, 5.8, 5.2 M records (max/mean
+%%    1.68): two subtasks got two partitions each. At 8 cores max/mean is 1.26 (just the
+%%    uneven partition sizes); at 4 cores 1.18. This strongly supports (a).
+%%  - Source+router is the busiest task and gets busier with cores: 57% busy at 1 core,
+%%    69% at 4, 81% at 6, 84% at 8. The window task stays 58-70%, the EMA task 17-25%.
+%%    So parsing/reading is the bottleneck, not the windows or the EMAs.
+%%  - Backpressure on the source falls from 15% (1 core) to 2% (8 cores).
+%%  - Kafka container CPU mean: 19% (1 core), 18% (4), 23% (6), 44% (8, max 126%).
+%%    Supports (b) at 8 cores. TaskManager memory peak 1.5-2.0 GB at every core count.
 %% Limitations to state: one repeat per point on 24 Nov (the 17 Nov repeats give the
 %% spread), a single TaskManager, a laptop, and everything sharing one Docker VM.
 \todo{scalability analysis paragraph, see the fact sheet}
@@ -515,6 +559,9 @@ Although the event counts per symbol span five orders of magnitude (Figure~\ref{
 %%    trades reach the keyed operators, so the extreme skew of the raw events never
 %%    reaches the windows.
 %%  - Remaining imbalance (1.15): hash collisions of a few busy symbols on one instance.
+%%  - Window operator max/mean by core count: 1.02 (2), 1.10 (4), 1.16 (6), 1.15 (8). EMA
+%%    operator 1.00-1.08. Compare with the source at 6 cores (1.68): the keyBy re-hash
+%%    spreads load better than Kafka's partitions do.
 %%  - What would break it: one symbol bigger than 1/parallelism of all trades. Not the
 %%    case here; mention key-splitting / two-stage aggregation as the fix if it were.
 %%  - Long tail in time, too: the warm-up of rare symbols (1,263 symbols with < 38
