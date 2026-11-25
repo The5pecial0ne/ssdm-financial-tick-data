@@ -136,11 +136,21 @@ The data set~\cite{frischbier2022debs} covers one week (Monday 8 to Sunday 14 No
 %%    about the warm-up than about a real trend.
 %%  - Saturday and Sunday contain events but almost no trades (the prices files for 13
 %%    and 14 Nov are nearly empty), so the experiments use Mon-Fri.
-%%  - Monday has no out-of-order trades at all within a symbol (0 trades older than one
-%%    already seen) and no placeholder trading times. Earlier exploration
-%%    (analysis/late_check.py) found trades stamped 01:00:00.000 on some other days;
-%%    the job treats that exact time as a placeholder and drops it. Re-run
-%%    late_check.py on your Mac if you want the exact per-day counts in the text.
+%%  - Per-day check of the raw CSVs (same logic as analysis/late_check.py, run 25 Nov over
+%%    all five weekday files; the trade counts add up to exactly 59,391,670):
+%%      day      trades       placeholder 01:00:00.000   out-of-order  in a passed window
+%%      Mon 8    11,794,520   0                          0             0
+%%      Tue 9    11,900,121   0                          0             0
+%%      Wed 10   12,068,273   5,506 (1,812 symbols)      0             0
+%%      Thu 11   11,835,403   0                          0             0
+%%      Fri 12   11,793,353   0                          0             0
+%%    Wednesday's placeholders are all Paris (4,371) and Amsterdam (1,135), none from
+%%    Frankfurt. No trade on any day is older than one already seen for the same symbol
+%%    (in file order), and no trading time is before 07:00 apart from the placeholders.
+%%    So in the real data the only "out-of-order" problem is the placeholder stamp; the
+%%    job treats that exact time as a placeholder and drops it (otherwise those trades
+%%    would land in a 01:00 window, or count as hours late). This is also why the
+%%    out-of-order sweep needed synthetic data (Section 5.6).
 %%  - The two clocks: on Monday 861 trades have a receive time ("Time") more than 60 s
 %%    away from their trading time; "Time" is only precise to whole seconds (99.99% end
 %%    in .000). That is why we use "Trading time" as event time.
