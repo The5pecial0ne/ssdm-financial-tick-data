@@ -172,7 +172,7 @@ docker compose --profile demo up -d --no-build
    docker compose run --rm --no-deps dashboard bash -c "python -m tools.dump_topic ema-results /tmp/week.jsonl --bootstrap kafka:29092 --idle 30 && python -m tools.validate --flink /tmp/week.jsonl --answer-key answer_key/answer-key-week.parquet --symbols-from-flink"
    ```
 
-   This job publishes the 35 symbols in `config/subscriptions.txt`, so the check covers those. The
+   This job publishes the 26 symbols in `config/subscriptions.txt`, so the check covers those. The
    scalability experiment checks all 4,970 symbols (`experiments/README.md`).
 4. Stop with `docker compose --profile app down --volumes`.
 

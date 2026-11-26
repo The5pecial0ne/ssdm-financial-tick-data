@@ -6,7 +6,7 @@ newest run of each into figures (`results/figures/`) and tables (`results/summar
 
 | Script | Answers | Grading criterion | Needs |
 |---|---|---|---|
-| `run_scalability.sh` | How does processing time change with 1, 2, 4 cores? How evenly is the load spread (long tail)? Is the Kafka-path output correct for the full week? | Scalability, Performance, Functionality, Evaluation | Docker, data |
+| `run_scalability.sh` | How does processing time change with the number of cores (1, 2, 4 by default; set `CORES`)? How evenly is the load spread (long tail)? Is the Kafka-path output correct for the full week? | Scalability, Performance, Functionality, Evaluation | Docker, data |
 | `run_latency.sh` | How long from a window closing to its advisory, at different input rates? | Performance (latency under load) | Docker, data |
 | `run_ooo_sweep.sh` | What does the out-of-order bound cost in latency, and what does it buy in correctness? | Creative exploration (trade-off backed by measurements) | Java + Maven, data |
 | `run_remaining.sh` | 6 and 8 cores, every event type, each exchange on its own, and latency with no out-of-order slack, then the overview table | Scalability (resources, event volumes, exchanges), Creative exploration | Docker, data |

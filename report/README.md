@@ -1,16 +1,15 @@
-# Report kit
+# Report
 
-- `report.tex`: the working report. Facts, setup, method, result tables and figures are filled in;
-  the analysis, interpretation, conclusions and contributions are marked with red TODOs, each with a
-  "FACT SHEET" comment above it listing the observations and candidate explanations. `report.pdf` is
-  the current build. Figures it uses are in `figures/`. Build with `latexmk -pdf report.tex` or upload
-  `report.tex`, `references.bib` and `figures/` to Overleaf.
-- `skeleton.tex`: ACM `sigconf` skeleton with the sections the course asks for. Each section has
-  comments listing what the grading criteria look for and where the evidence is in this repo. It
-  contains headings only, because the course requires the analysis and conclusions to be your own writing.
-- `references.bib`: the dataset citation and the core systems papers.
-- `AI_USE.md`: template for the required AI-use disclosure.
+- `report.pdf`: the submitted report (ACM `sigconf`, 6 pages including references).
+- `report.tex`, `references.bib`, `figures/`: its source. Build with `latexmk -pdf report.tex`, or upload
+  those three to Overleaf. The report uses `longtail-week.png`, `dashboard-top.png` and `scaling.pdf`.
+  The other two PNGs in `figures/` belong to earlier drafts.
+- `scripts/fig_scaling.py`: makes `figures/scaling.pdf` from
+  `results/scalability/20261125-223400-cores-1-8-r3/` (speedup, the source-partition ceiling, and
+  load per instance).
+- `AI_USE.md`: the AI-use disclosure, the same text as the report's "Use of AI Tools" section.
+- `materials/`: the working notes behind the report (design decisions, fact sheets, diagrams).
+- `skeleton.tex`: the empty ACM skeleton the report started from.
 
-Figures come from `python -m experiments.analyze` (written to `results/figures/`) and the
-dashboard screenshot `docs/dashboard.png`. The numbers behind every figure are in `results/summary.md`.
-Page limit: 4 to 5 pages.
+Every number in the report comes from `results/`. Comments in `report.tex` name the source of each
+section and table.
