@@ -118,10 +118,10 @@ WARNING: Unknown module: jdk.compiler specified to --add-exports
 WARNING: Unknown module: jdk.compiler specified to --add-exports
 WARNING: Unknown module: jdk.compiler specified to --add-exports
 sent 3,000,000 events in 150.0s (19,997 events/s)
-wrote 96,765 records from ema-results to /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-default/results-c4-rate20000.jsonl
+wrote 96,765 records from ema-results to /tmp/lat20k-default/results-c4-rate20000.jsonl
 ./experiments/common.sh: line 80: 54564 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
 
-[23:09:29] done: /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-default  (next: python -m experiments.analyze)
+[23:09:29] done: /tmp/lat20k-default  (next: python -m experiments.analyze)
 RC default 0
 
 [23:10:29] starting Kafka and Flink (first run builds the images, a few minutes)
@@ -232,9 +232,9 @@ WARNING: Unknown module: jdk.compiler specified to --add-exports
 WARNING: Unknown module: jdk.compiler specified to --add-exports
 WARNING: Unknown module: jdk.compiler specified to --add-exports
 sent 3,000,000 events in 150.0s (19,997 events/s)
-wrote 96,765 records from ema-results to /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-tuned/results-c4-rate20000.jsonl
+wrote 96,765 records from ema-results to /tmp/lat20k-tuned/results-c4-rate20000.jsonl
 ./experiments/common.sh: line 80: 54993 Terminated: 15          sample_cpu "$OUT/cpu-$tag.csv"
 
-[23:13:35] done: /private/tmp/claude-501/-Users-manasvernekar-Applications/3948b95a-048b-44bf-9c74-a31c9ec0268b/scratchpad/lat20k-tuned  (next: python -m experiments.analyze)
+[23:13:35] done: /tmp/lat20k-tuned  (next: python -m experiments.analyze)
 RC tuned 0
 RERUN DONE secs=434
