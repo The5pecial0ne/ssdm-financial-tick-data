@@ -98,13 +98,13 @@ quick start on Windows (`.github/workflows/ci.yml`).
 ## Get the data
 
 Download the trading data from Zenodo, [record 6382482](https://doi.org/10.5281/zenodo.6382482)
-(CC BY-NC-SA 4.0). Put the day files in `data/` with these names:
+(CC BY-NC-SA 4.0). Put the five weekday files in `data/` with these names (about 25 GB):
 
 ```
-data/debs2022-gc-trading-day-08-11-21.csv   ... data/debs2022-gc-trading-day-14-11-21.csv
+data/debs2022-gc-trading-day-08-11-21.csv   ... data/debs2022-gc-trading-day-12-11-21.csv
 ```
 
-`data/` is git-ignored. Saturday and Sunday contain no trades.
+`data/` is git-ignored. Saturday and Sunday (`13-11-21`, `14-11-21`) contain no trades; only `analysis/longtail.py` reads them.
 
 ## Run the whole system (Docker)
 
