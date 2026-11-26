@@ -203,7 +203,7 @@ experiments/     experiment scripts and analysis
 flink-job/       the Flink job (Flink 1.20.0, compiled for Java 11, runs on Java 17), Dockerfile, run-local.sh
 producer/        Kafka producer
 report/          the final report (report.tex, report.pdf), its figures and scripts, AI-use disclosure
-results/         experiment output (preview-cloud/ holds a synthetic-data preview)
+results/         raw experiment output, summary.md and figures (RUN-NOTES.md says how each run was made)
 scripts/         export-images.sh: pack the images into one file for another machine
 tools/           shared tick reader, reference, validator, synthetic data, topic dump
 ```

@@ -13,7 +13,7 @@ the experimental setup. Every value is from a file in the repo; the file is name
 | Cooling / power | passively cooled (no fan), on mains power | `RUN-NOTES.md`, `experiments/README.md` |
 | Docker Desktop | 29.8.0, 10 CPUs, 7.75 GiB (8,319,504,384 bytes) | `RUN-NOTES.md`, `settings.json` |
 | Host OS seen by the scripts | Darwin arm64 | `settings.json` |
-| Synthetic OOO sweep and cloud preview | 4-core x86-64 Linux cloud container | `results/ooo-synthetic/README.md`, `results/preview-cloud/` |
+| Synthetic OOO sweep | 4-core x86-64 Linux cloud container | `results/ooo-synthetic/README.md` |
 
 ## Software
 
