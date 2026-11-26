@@ -1,0 +1,6 @@
+bound_ms,seconds,late_trades,passed,windows_wrong,signals_missed_or_wrong,signals_expected
+0,26.7,0,1,0,0,4840
+1000,25.7,0,1,0,0,4840
+5000,26.2,0,1,0,0,4840
+30000,25.9,0,1,0,0,4840
+120000,25.8,0,1,0,0,4840

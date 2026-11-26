@@ -47,3 +47,20 @@ Raw dumps over 25 MB (`flink-output.jsonl` 582 MB, `flink-ooo*.jsonl` 99 MB each
 - The harmless `BrokenPipeError` in the latency logs is the CPU sampler being killed in the middle of a write.
 - A first scalability attempt was killed during the Kafka fill when the controlling session ended; it was
   deleted and restarted from scratch.
+
+# Mac rerun, 25 Nov 2026
+
+Raw record of the repeat pass. Earlier runs were kept; the new ones sit next to them.
+
+- Hardware: same MacBook Air M5. Core split from `sysctl`: `hw.perflevel0.physicalcpu` 4 (performance),
+  `hw.perflevel1.physicalcpu` 6 (efficiency). Docker Desktop 29.8.0, 10 CPUs, 7.75 GiB. On mains power
+  (it was plugged in at 34% battery just before the run, so it was charging throughout).
+- 22:28 clean start (`docker compose --profile app down --volumes`), then `--profile app up -d --build job producer`
+  (the dashboard container was left out because a local Streamlit dashboard already held port 8501).
+  Producer sent 59,391,670 events in 270.7 s. TESTING.md section 3 validation: PASSED, 15,272 windows, 174 signals.
+- 22:34 to 23:07, one chain (log in `results/logs/chain-20261125-223400.log`), under `caffeinate -i`:
+  - `OUT=results/scalability/20261125-223400-cores-1-8-r3 CORES="1 2 3 4 5 6 7 8" REPEATS=3 ./experiments/run_scalability.sh`
+    (full-week validation of the 8-core output: PASSED, 1,855,645 windows, 4,970 symbols, 11,349 signals)
+  - `OUT=results/latency/20261125-223400 ./experiments/run_latency.sh`
+  - `OUT=results/ooo-sweep/20261125-223400 ./experiments/run_ooo_sweep.sh` (Java 17 from Homebrew; 0 late trades at every bound, all passed)
+- Analysis: `python -m experiments.analyze` with all scalability and latency runs named, `--ooo results/ooo-sweep/20261125-223400`.

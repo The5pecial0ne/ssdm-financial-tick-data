@@ -1,0 +1,1 @@
+{"input": "data/debs2022-gc-trading-day-08-11-21.csv", "bounds_ms": "0 1000 5000 30000 120000", "parallelism": 4, "host": "Darwin arm64", "cpus": 10}
