@@ -317,8 +317,6 @@ For the whole working week, our Kafka and Flink pipeline computes both EMAs and 
 \end{enumerate}
 
 \subsection{\texorpdfstring{{Manas Vernekar}}{Manas Vernekar}}
-%% Written from the project records. Manas: read this and change anything that isn't how
-%% you would put it; these answers are meant to be your own reflection.
 \begin{enumerate}
   \item \textbf{Most important design decisions.} Building an independent reference first and holding every change to an exact match with it, window by window over the whole week. This turned correctness from spot checks into a test we could rerun after every change, and it is what exposed the subtle rules: the tie-break for the close, the placeholder timestamps and the first-window advisory. The second was keying the data by symbol end to end, which made per-symbol order, per-partition watermarks and balanced keyed state possible.
   \item \textbf{Most challenging parts.} Problems that only appear at full scale or in a live run: trades declared late because idle Kafka partitions let one partition drive the watermark, Kafka deleting results stamped with 2021 event times under its default seven-day retention, and the first deployment's single task slot, which prevented any parallelism above one. Explaining the scaling curve was also harder than measuring it and needed per-operator metrics.

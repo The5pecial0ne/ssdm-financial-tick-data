@@ -1,13 +1,11 @@
 # Design decisions: what we chose, what else was on the table, and the evidence
 
-Raw material for the System Architecture and Implementation sections, and for the rubric's
-"creative explorations" line (trade-offs discussed and, ideally, backed by measurements).
-These are notes, not report text. Each entry says what the code does (with the file), the
-alternatives, the trade-off, and the evidence we have. Pick the ones you want and write them up
-in your own words.
+Our notes on the main design choices behind the system, the alternatives we considered, and the
+measurements behind them. The report summarises them; this file has the detail. Each entry says
+what the code does (with the file), the alternatives, the trade-off, and the evidence we have.
 
 Where an alternative was actually tried in this repo, the entry says so and names the commit or
-PR. Where it was only considered, it says that too. Don't claim we tried something we didn't.
+PR. Where it was only considered, it says that too.
 
 Quick index:
 
@@ -54,7 +52,7 @@ Quick index:
 | 17 Nov | First Mac experiment run; three script bugs found and fixed (see D24) | `results/RUN-NOTES.md`, PR #5 |
 | 24 Nov | Overnight run: 1-8 cores, all events, per exchange, OOO=0 latency | PR #6 |
 
-What the October prototype looked like (commit `d46892d`), so you can describe what changed and why:
+What the October prototype looked like (commit `d46892d`), and what changed since:
 
 - Input topic `trading-events`, records as JSON, no message key, `OffsetsInitializer.latest()`.
 - `WatermarkStrategy.forBoundedOutOfOrderness(5 s)` applied **after** the source (one watermark
@@ -327,8 +325,7 @@ trades.
 **Alternative.** `EXACTLY_ONCE` sinks with transactions and checkpointing on.
 
 **Trade-off notes.** Exactly-once adds checkpoint barriers and transactional commits (latency
-grows to the checkpoint interval for consumers reading committed data). Not measured here. Say
-what you think it would cost, or measure it if there's time.
+grows to the checkpoint interval for consumers reading committed data). Not measured here.
 
 ---
 

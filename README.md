@@ -198,7 +198,7 @@ analysis/        data exploration, the answer-key scripts (pandas) and the test 
 answer_key/      reference results (parquet)
 config/          subscribed symbols
 dashboard/       Streamlit dashboard (its light and dark theme is in .streamlit/config.toml)
-docs/            how to run and check it on another machine (TESTING.md), screenshots
+docs/            how to run and check it on another machine (TESTING.md), design decisions, screenshots
 experiments/     experiment scripts and analysis
 flink-job/       the Flink job (Flink 1.20.0, compiled for Java 11, runs on Java 17), Dockerfile, run-local.sh
 producer/        Kafka producer
