@@ -135,8 +135,11 @@ docker compose --profile demo logs -f verify
 
 ### From GitHub's container registry
 
-If the images have been published (the manual "publish images" workflow in the repository's
-Actions tab builds them for both PCs and Apple Silicon), set `IMAGE_PREFIX` to the registry path:
+This only works once the images have been published with the manual "publish images" workflow in
+the repository's Actions tab (it builds them for both PCs and Apple Silicon). The repository's
+**Packages** list on GitHub shows whether `ssdm-flink` and `ssdm-python` are there. If they aren't,
+`docker compose pull` fails with "denied"; build them instead with the demo in section 1. If they
+are, set `IMAGE_PREFIX` to the registry path:
 
 ```bash
 # Linux, macOS, Git Bash
