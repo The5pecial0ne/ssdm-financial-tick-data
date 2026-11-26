@@ -30,3 +30,24 @@ python -m experiments.analyze --results-dir results/ooo-synthetic
 
 The Flink output (`flink-ooo*.jsonl`) and the reference (`reference.parquet`) are not committed
 because they are large. The commands above recreate them in about two minutes.
+
+## The counts vary between runs
+
+Running the sweep again does not give the same numbers. Flink emits watermarks on a wall-clock timer
+(every 200 ms), so whether a delayed trade arrives after the watermark has passed its window depends
+on timing. On 26 Nov 2026 we regenerated the input with the command above and ran the sweep eight times
+on the same kind of machine (4-core x86_64 cloud container, parallelism 4; repeats 2 and 3 only tried
+some bounds). `repeats/repeats.csv` has every run:
+
+| Bound | Runs | Wrong windows (min to max) | Runs with any wrong window |
+|---:|---:|---:|---:|
+| 0 s | 8 | 0 to 347 | 6 |
+| 5 s | 8 | 0 to 114 | 5 |
+| 15 s | 3 | 57 to 302 | 3 |
+| 30 s | 6 | 0 to 114 | 1 |
+| 60 s | 6 | 0 | 0 |
+| 120 s | 6 | 0 | 0 |
+
+So the trend in the table above holds (small bounds usually give wrong windows, 60 s and more never
+did), but a single run's counts should not be read as exact. The input was regenerated, and `tools/synth.py`
+output can differ slightly between library versions, so the input is not byte-identical to the one in `ooo-sweep/run/`.
