@@ -282,7 +282,7 @@ Although event counts per symbol span five orders of magnitude, the window opera
 On the real data no trade arrives late: on Monday, bounds of 0, 1, 5, 30 and 120\,s all give exactly the reference output. To measure the trade-off we generated 3 million events in the same layout in which 2\% of the trades are delivered up to 60\,s late, and ran the job in file mode with bounds from 0 to 120\,s (parallelism 4, on a 4-core x86-64 cloud machine).
 
 \begin{table}[t]
-  \caption{Synthetic input with 2\% of trades up to 60\,s late: trades set aside, and windows and advisories that differ from the reference.}
+  \caption{Synthetic input with 2\% of trades up to 60\,s late: trades set aside, and windows and advisories that differ from the reference (one run; counts vary).}
   \label{tab:ooo}
   \small
   \begin{tabular}{rrrrr}
@@ -296,7 +296,7 @@ On the real data no trade arrives late: on Monday, bounds of 0, 1, 5, 30 and 120
   \end{tabular}
 \end{table}
 
-Wrong windows fall from 517 to none at 30\,s (Table~\ref{tab:ooo}), while the run time stays at 10.5--12.0\,s for every bound: a larger bound costs no throughput, only latency, since every window waits for the bound in event time. Few late trades cause many wrong windows, because an error in one close propagates through the EMA into every later window of that symbol; a 30\,s bound suffices for delays up to 60\,s because a trade is only late if the watermark has already passed its window's end. We keep 5\,s as the default: the real data needs no tolerance, 5\,s absorbs small delays from the transport and producer, and its latency cost is small compared to five-minute windows. Deployments with more disorder can raise it at no throughput cost.
+Wrong windows fall from 517 to none at 30\,s (Table~\ref{tab:ooo}), while the run time stays at 10.5--12.0\,s for every bound: a larger bound costs no throughput, only latency, since every window waits for the bound in event time. Few late trades cause many wrong windows, because an error in one close propagates through the EMA into every later window of that symbol. Counts vary between runs, as watermarks follow a wall-clock timer: in eight runs 0\,s gave 0--347 wrong windows and 30\,s failed once in six; 60 and 120\,s never did. We keep 5\,s as the default: the real data needs no tolerance, 5\,s absorbs small delays from the transport and producer, and its latency cost is small compared to five-minute windows.
 
 %% ---------------------------------------------------------------------------
 \section{Conclusion}\label{sec:concl}

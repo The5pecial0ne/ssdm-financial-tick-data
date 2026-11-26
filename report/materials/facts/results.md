@@ -146,6 +146,10 @@ Synthetic, 3 M events, 2% of trades delayed up to 60 s (cloud container):
 | 60 | 10.9 | 0 | 0 | 0 (4,970) | yes |
 | 120 | 11.0 | 0 | 0 | 0 (4,970) | yes |
 
+This is one run. Eight later runs (26 Nov, `results/ooo-synthetic/repeats/`) gave 0-347 wrong windows
+at 0 s, 0-114 at 5 s and at 30 s (30 s failed once in six), and 0 at 60 and 120 s every time.
+Watermarks are emitted on a wall-clock timer, so which delayed trades count as late depends on timing.
+
 ## 8. Producer and fill rates
 
 | Input | Events | Fill time | Events/s |
