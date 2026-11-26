@@ -20,9 +20,10 @@ if [[ "$1" == "--reset" ]]; then
 fi
 
 # ticks: one partition per possible source subtask; keyed by symbol so per-symbol order holds
-$KT --create --if-not-exists --topic ticks --partitions "$PARTITIONS" --replication-factor 1
+# retention.ms=-1: records carry 2021 event-time timestamps, which the default 7-day retention would delete
+$KT --create --if-not-exists --topic ticks --partitions "$PARTITIONS" --replication-factor 1 --config retention.ms=-1
 for t in ema-results advisories late-trades; do
-  $KT --create --if-not-exists --topic "$t" --partitions 1 --replication-factor 1
+  $KT --create --if-not-exists --topic "$t" --partitions 1 --replication-factor 1 --config retention.ms=-1
 done
 
 echo "Kafka topics ready:"

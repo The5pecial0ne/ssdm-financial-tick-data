@@ -3,10 +3,17 @@
 CS-E4780 Scalable Systems and Data Management, course project (Aalto University, 2026).
 
 A streaming system that replays a week of real tick data (DEBS 2022 Grand Challenge: 289 million
-events, 5,504 symbols, Paris, Amsterdam and Frankfurt) through **Kafka** into **Apache Flink**. It
+events, 5,502 symbols, Paris, Amsterdam and Frankfurt) through **Kafka** into **Apache Flink**. It
 computes **EMA38 and EMA100 for every symbol in 5-minute tumbling windows** (Query 1) and emits
 **buy/sell advisories on EMA crossovers** (Query 2). A **Streamlit dashboard** shows the results
 (smart visualization). Every result is checked against an independent pandas reference.
+
+**Report:** [`report/report.pdf`](report/report.pdf). Headline results (MacBook Air M5, Docker, details in
+the report and in [`results/summary.md`](results/summary.md)):
+
+- Full week (Mon to Fri, 59.4 M trades, 4,970 symbols): all 1,855,645 windows and 11,349 advisories match the reference.
+- 1 to 8 TaskManager cores: 73.9 s down to 18.4 s, 3.2 M events/s, speedup 4.0 (3 repeats per point).
+- Latency from window completion to result: median 93 to 256 ms with tuned settings at 20k to 100k events/s.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
@@ -40,7 +47,7 @@ flowchart LR
 | Validator | `tools/validate.py` | Window-by-window comparison: windows, closes, EMAs, advisories |
 | Answer key | `answer_key/answer-key-week.parquet` | The reference result for Mon to Fri (1.86M symbol-windows) |
 | Dashboard | `dashboard/dashboard.py` | Live from Kafka, or from any results file |
-| Experiments | `experiments/` | Scalability (1/2/4 cores), latency under load, out-of-order trade-off, analysis |
+| Experiments | `experiments/` | Scalability (1 to 8 cores), latency under load, out-of-order trade-off, analysis |
 
 **Semantics** (project spec section 3): a window is `[k·5min, (k+1)·5min)` from midnight. Its close
 is the last trade (`Last > 0`) by trading time, with ties broken by file position. EMA₀ = 0 for
@@ -109,7 +116,7 @@ docker compose --profile app up -d --build
 
 This builds two images, `ssdm-flink:1.0` (Flink 1.20 with the job inside) and `ssdm-python:1.0`
 (producer, dashboard, tools). It then starts Kafka, creates the topics, starts a JobManager and a
-TaskManager (4 cores and 4 slots by default), submits the job for the symbols in
+TaskManager (4 task slots and no CPU cap by default), submits the job for the symbols in
 `config/subscriptions.txt`, replays Monday to Friday, and serves:
 
 - Flink UI: http://localhost:8081 (operator metrics `ticksTrade`, `ticksNonTrade`, `ticksPlaceholder`...)
@@ -178,7 +185,7 @@ python -m tools.validate --flink results/week-flink.jsonl --answer-key answer_ke
 See [`experiments/README.md`](experiments/README.md). In short:
 
 ```bash
-./experiments/run_scalability.sh    # 1, 2, 4 cores x 3 repeats, CPU usage, load per instance
+./experiments/run_scalability.sh    # 1, 2, 4 cores x 3 repeats by default; the report used CORES="1 2 3 4 5 6 7 8"
 ./experiments/run_latency.sh        # latency percentiles at several input rates
 ./experiments/run_ooo_sweep.sh      # out-of-order bound vs late trades vs correctness
 python -m experiments.analyze       # -> results/figures/*.png, results/summary.md
@@ -193,9 +200,9 @@ config/          subscribed symbols
 dashboard/       Streamlit dashboard (its light and dark theme is in .streamlit/config.toml)
 docs/            how to run and check it on another machine (TESTING.md), screenshots
 experiments/     experiment scripts and analysis
-flink-job/       the Flink job (Java 11, Flink 1.20), Dockerfile, run-local.sh
+flink-job/       the Flink job (Flink 1.20.0, compiled for Java 11, runs on Java 17), Dockerfile, run-local.sh
 producer/        Kafka producer
-report/          report skeleton (ACM template) and AI-use disclosure template
+report/          the final report (report.tex, report.pdf), its figures and scripts, AI-use disclosure
 results/         experiment output (preview-cloud/ holds a synthetic-data preview)
 scripts/         export-images.sh: pack the images into one file for another machine
 tools/           shared tick reader, reference, validator, synthetic data, topic dump

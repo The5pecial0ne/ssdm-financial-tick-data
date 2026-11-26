@@ -25,3 +25,13 @@ Running job remains active and process incoming Kafka messages.
 
 04-11-2026
 The project was developed using a single TaskManager Docker deployment. Attempts to execute the job using higher parallelism values resulted in NoResourceAvailableException, indicating insufficient available task slots. Consequently, the evaluation was performed using the available execution resources.
+
+17-11-2026
+The single-slot limit above is solved: the TaskManager now gets as many task slots as CPU cores
+(TM_SLOTS / TM_CPUS in docker-compose.yml), and the job runs with parallelism 1 to 8. The input topic
+is now `ticks` (8 partitions, keyed by symbol) instead of `trading-events`. The full list of design
+decisions, with alternatives and evidence, is in report/materials/design-decisions.md.
+
+25-11-2026
+Final measurements: 1 to 8 cores with 3 repeats each (results/scalability/20261125-223400-cores-1-8-r3).
+The report is in report/report.pdf.
