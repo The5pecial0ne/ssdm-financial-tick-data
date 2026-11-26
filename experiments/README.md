@@ -112,10 +112,3 @@ By default it takes the newest run of each experiment. To put several runs side 
 ```bash
 python -m experiments.analyze --scalability results/scalability/*/ --latency results/latency/20261117-224744 results/latency/tuned
 ```
-
-## What's already in `results/preview-cloud/`
-
-A scalability preview run in a 4-core Linux cloud container on **synthetic** data
-(`tools/synth.py`, 12M events), using `run_local_preview.sh`. It shows the harness works and roughly
-what to expect (about 300k events/s on 1 core and 830k on 4). It is not the real dataset, so don't put
-it in the report as your result. Your own Mac runs replace it.

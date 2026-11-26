@@ -1,2 +1,0 @@
-{"cores": "1 2 4", "repeats": 2, "days": "synthetic 12M", "events": "all",
- "host": "Linux x86_64, 4 cores, mini cluster pinned with taskset", "docker_cpus": "n/a"}
