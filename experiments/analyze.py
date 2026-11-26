@@ -172,10 +172,16 @@ def latency(d: Path, lines: list[str], suffix: str = ""):
         row["advisory_latency_p99"] = float(np.percentile(adv["latency_ms"], 99)) if len(adv) else float("nan")
         rows.append(row)
         per_run.append((cores, prod["events_per_second"], np.sort(m["latency_ms"].to_numpy())))
-    if not rows:
+    if rows:
+        t = pd.DataFrame(rows).sort_values(["cores", "achieved_rate"])
+        t.to_csv(d / "summary.csv", index=False)
+    elif (d / "summary.csv").exists():
+        # The per-window dumps (results-*.jsonl) are too big for git, so a fresh clone only has the
+        # table they produced. Use it, so the tables and the rate figure can still be rebuilt.
+        print(f"  no results-*.jsonl in {d}, using its summary.csv")
+        t = pd.read_csv(d / "summary.csv").sort_values(["cores", "achieved_rate"])
+    else:
         return
-    t = pd.DataFrame(rows).sort_values(["cores", "achieved_rate"])
-    t.to_csv(d / "summary.csv", index=False)
     lines += [f"## Latency ({d})", "",
               "Latency = time from a window becoming complete (first event of the next window sent) to its "
               "EMA result being produced. wait = until the window fired; processing = after that.", "",
@@ -192,6 +198,14 @@ def latency(d: Path, lines: list[str], suffix: str = ""):
                title=f"Latency under load ({c} cores)")
         ax.set_ylim(bottom=0)
         figs.append(save(fig, f"latency-vs-rate-c{c}{suffix}.png"))
+
+    if not per_run:
+        # Without the dumps the distribution can't be redrawn; keep the figure made from them, if any
+        cdf = FIG / f"latency-cdf{suffix}.png"
+        if cdf.exists():
+            figs.append(cdf)
+        lines += [f"![]({p.relative_to(RESULTS)})" for p in figs] + [""]
+        return
 
     fig, ax = plt.subplots(figsize=(4.6, 3))
     palette = [BLUE, ORANGE, AQUA]

@@ -5,6 +5,8 @@ venv/
 .DS_Store
 analysis/*.png
 results/ci/
+# Outputs of the synthetic quick-start check in the README
+results/synthetic*
 __pycache__/
 # Raw experiment dumps (hundreds of MB, over GitHub's file limit); the numbers behind them are in summary.csv / summary.md
 results/**/flink-output.jsonl

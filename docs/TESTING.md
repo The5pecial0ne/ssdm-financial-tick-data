@@ -9,7 +9,7 @@ run ends with `PASSED` or `FAILED`.
 |---|---|---|
 | See it working, without downloading the dataset | [1. The demo](#1-the-demo-recommended) | about 10 minutes the first time, then 1 minute |
 | Run it without building anything | [2. Prebuilt images](#2-run-prebuilt-images-instead-of-building) | a few minutes |
-| Run the real week of data | [3. The full week](#3-the-full-week-of-real-data) | an hour or more, plus a download of about 25 GB |
+| Run the real week of data | [3. The full week](#3-the-full-week-of-real-data) | a download of about 25 GB, then about 5 minutes on a recent laptop |
 | Check correctness without Docker | [4. Without Docker](#4-without-docker-java-and-python-only) | 2 minutes |
 
 GitHub Actions runs path 1 on a clean Ubuntu machine, and path 4 on Ubuntu and on Windows, for every
@@ -135,8 +135,11 @@ docker compose --profile demo logs -f verify
 
 ### From GitHub's container registry
 
-If the images have been published (the manual "publish images" workflow in the repository's
-Actions tab builds them for both PCs and Apple Silicon), set `IMAGE_PREFIX` to the registry path:
+This only works once the images have been published with the manual "publish images" workflow in
+the repository's Actions tab (it builds them for both PCs and Apple Silicon). The repository's
+**Packages** list on GitHub shows whether `ssdm-flink` and `ssdm-python` are there. If they aren't,
+`docker compose pull` fails with "denied"; build them instead with the demo in section 1. If they
+are, set `IMAGE_PREFIX` to the registry path:
 
 ```bash
 # Linux, macOS, Git Bash
@@ -153,15 +156,19 @@ docker compose --profile demo up -d --no-build
 ## 3. The full week of real data
 
 1. Download the trading data from Zenodo, [record 6382482](https://doi.org/10.5281/zenodo.6382482),
-   and put the day files in `data/` as `data/debs2022-gc-trading-day-08-11-21.csv` and so on, up to
-   `14-11-21` (the main README has the details). The files take about 25 GB, and Kafka needs
-   another 10 GB or so inside Docker while the week is replayed.
+   and put the five weekday files in `data/`: `data/debs2022-gc-trading-day-08-11-21.csv` and so on,
+   up to `12-11-21` (the main README has the details). Saturday and Sunday (`13-11-21`, `14-11-21`)
+   contain no trades and aren't needed. The five files take about 25 GB, and Kafka needs another
+   10 GB or so inside Docker while the week is replayed.
 2. Start everything. The producer replays Monday to Friday as fast as it can:
 
    ```bash
    docker compose --profile app up -d --build
    docker compose --profile app logs -f producer      # progress; it exits when the week is sent
    ```
+
+   The producer is done when it prints its last line, for example
+   `sent 59,391,670 events in 247.7s (239,751 events/s)` (about 4 minutes on a MacBook Air M5).
 
    To watch it in market time instead, add `SPEED=60` (an hour of trading per minute) in front of
    the command, or in PowerShell set `$env:SPEED = "60"` first.
@@ -171,6 +178,19 @@ docker compose --profile demo up -d --no-build
    ```bash
    docker compose run --rm --no-deps dashboard bash -c "python -m tools.dump_topic ema-results /tmp/week.jsonl --bootstrap kafka:29092 --idle 30 && python -m tools.validate --flink /tmp/week.jsonl --answer-key answer_key/answer-key-week.parquet --symbols-from-flink"
    ```
+
+   After about half a minute it ends like this:
+
+   ```
+   windows: reference 15,272 | Flink 15,272 | matched 15,272 | missing 0 | extra 0
+   values: 0 windows differ beyond 1e-09 relative; max relative error {...}
+   signals_all: {'expected': 174, 'matched': 174, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+   signals_excluding_first_windows: {'expected': 148, 'matched': 148, 'missed': 0, 'spurious': 0, 'wrong_direction': 0}
+   PASSED -> /tmp/week.validation.json
+   ```
+
+   The dashboard at http://localhost:8501 then shows the same week: 15,272 windows and 72 buy and
+   76 sell advisories (the 148 above; first-window buys are hidden by default).
 
    This job publishes the 26 symbols in `config/subscriptions.txt`, so the check covers those. The
    scalability experiment checks all 4,970 symbols (`experiments/README.md`).
@@ -211,7 +231,8 @@ python -m tools.validate --flink results/synthetic.jsonl --csv data/synthetic.cs
 ## Troubleshooting
 
 - **"port is already allocated"**: something else uses 8081, 8501 or 9092. Stop it, or stop an old
-  run of this project with `docker compose --profile demo down --volumes`.
+  run of this project with `docker compose --profile demo down --volumes`. A dashboard started by
+  hand with `streamlit run` also holds 8501; stop it first.
 - **"container name ... is already in use"**: a container called `kafka`, `jobmanager` or
   `taskmanager` is left over, maybe from another project. Remove it with `docker rm -f kafka jobmanager taskmanager`.
 - **`toomanyrequests` while building**: Docker Hub limits anonymous downloads. Run `docker login`

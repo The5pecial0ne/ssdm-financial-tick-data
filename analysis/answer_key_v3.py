@@ -1,3 +1,4 @@
+import os
 import sys
 import pandas as pd
 
@@ -61,8 +62,13 @@ for day in DAYS:
           f"{(real['signal'] == 'buy').sum():,} buys, {(real['signal'] == 'sell').sum():,} sells")
 
 # ---- What did the fix change compared with v2? ----
+# The v2 keys came from an earlier version of this script and only live in the original data/ folder,
+# so this comparison is skipped for any day whose v2 key isn't there.
 print("\nv3 vs v2:")
 for day, v3 in results.items():
+    if not os.path.exists(f"../data/answer-key-v2-{day}.parquet"):
+        print(f"{day}: no v2 key in ../data, comparison skipped")
+        continue
     v2 = pd.read_parquet(f"../data/answer-key-v2-{day}.parquet")
     a, b = v2.copy(), v3.copy()
     for df in (a, b):
