@@ -1,0 +1,16 @@
+cores,container,samples,cpu_mean,cpu_max,mem_peak_mib
+1,jobmanager,36,2.4,31.2,847
+1,kafka,36,18.7,82.8,1410
+1,taskmanager,36,93.4,107.3,1516
+2,jobmanager,22,11.5,226.3,944
+2,kafka,22,26.2,83.9,1455
+2,taskmanager,22,188.9,205.7,1884
+4,jobmanager,13,20.8,246.6,985
+4,kafka,13,17.7,46.1,1410
+4,taskmanager,13,354.8,403.5,1992
+6,jobmanager,12,23.1,256.7,1113
+6,kafka,12,23.1,49.5,1426
+6,taskmanager,12,471.5,612.1,2037
+8,jobmanager,9,31.6,267.8,1210
+8,kafka,9,43.8,125.9,1462
+8,taskmanager,9,604.3,802.4,2015
