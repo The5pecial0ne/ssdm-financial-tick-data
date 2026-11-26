@@ -107,8 +107,21 @@ python -m experiments.analyze
 open results/summary.md results/figures/
 ```
 
-By default it takes the newest run of each experiment. To put several runs side by side, name them:
+By default it takes the newest run of each experiment, and it overwrites `results/summary.md`. To put
+several runs side by side, name them. This is the exact command behind the committed
+`results/summary.md`, and on a fresh clone it rebuilds that file unchanged:
 
 ```bash
-python -m experiments.analyze --scalability results/scalability/*/ --latency results/latency/20261117-224744 results/latency/tuned
+python -m experiments.analyze \
+  --scalability results/scalability/20261125-223400-cores-1-8-r3 results/scalability/20261124-132305-cores-1-8 \
+                results/scalability/20261117-221652 results/scalability/20261124-132305-all-events \
+                results/scalability/20261124-132305-FR results/scalability/20261124-132305-NL \
+                results/scalability/20261124-132305-ETR \
+  --latency results/latency/20261125-223400 results/latency/20261117-224744 results/latency/tuned \
+            results/latency/20261124-132305-ooo0 \
+  --ooo results/ooo-sweep/20261125-223400
 ```
+
+The latency runs' per-window dumps (`results-*.jsonl`, hundreds of MB) are not in git. Without them
+the script reads each run's `summary.csv` instead and keeps the latency distribution figures that are
+already in `results/figures/`.

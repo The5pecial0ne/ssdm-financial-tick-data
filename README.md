@@ -194,7 +194,7 @@ python -m experiments.analyze       # -> results/figures/*.png, results/summary.
 ## Repository layout
 
 ```
-analysis/        data exploration and the original answer-key scripts (pandas), test slice
+analysis/        data exploration, the answer-key scripts (pandas) and the test slice; see analysis/README.md
 answer_key/      reference results (parquet)
 config/          subscribed symbols
 dashboard/       Streamlit dashboard (its light and dark theme is in .streamlit/config.toml)

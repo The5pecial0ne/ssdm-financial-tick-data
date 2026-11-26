@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 
 DAYS = ["08-11-21", "09-11-21", "10-11-21", "11-11-21", "12-11-21"]
@@ -14,6 +16,9 @@ print(f"week: {len(key):,} symbol-windows, {len(signals):,} signals "
 print("real crossovers by hour:\n", real["window_start"].dt.hour.value_counts().sort_index())
 
 # 2. v2 vs v3: did crossovers move in time, or appear/disappear?
+# Needs the earlier v2 keys, which only live in the original data/ folder; stop here without them.
+if not all(os.path.exists(f"../data/answer-key-v2-{d}.parquet") for d in DAYS):
+    raise SystemExit("\nv2 keys not in ../data, so the v2 vs v3 comparison is skipped")
 old = pd.concat([pd.read_parquet(f"../data/answer-key-v2-{d}.parquet") for d in DAYS], ignore_index=True)
 old = old[(old["signal"] != "") & ~old["first_window"]]
 
