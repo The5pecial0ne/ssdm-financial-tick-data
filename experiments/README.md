@@ -17,8 +17,9 @@ newest run of each into figures (`results/figures/`) and tables (`results/summar
 1. **Docker Desktop**: Settings → Resources. Give it at least **6 CPUs and 8 GB of memory**,
    so a 4-core TaskManager plus Kafka and the JobManager fit. Note the numbers for the report.
 2. **Python**: `python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt`
-3. **Data**: the day files must be in `data/` as `data/debs2022-gc-trading-day-08-11-21.csv` and so on
-   (see the main README, "Get the data").
+3. **Data**: `python3 scripts/download_data.py` puts the day files in `data/` as
+   `data/debs2022-gc-trading-day-08-11-21.csv` and so on (see the main README, "Get the data").
+   The scripts stop straight away with a clear message if a file they need is missing.
 4. Close other heavy apps. Plug the laptop in. A MacBook Air has no fan and slows down when it gets hot,
    so leave a minute between experiments, and mention this in the limitations.
 
@@ -29,6 +30,10 @@ newest run of each into figures (`results/figures/`) and tables (`results/summar
 ```
 
 Defaults: all trades of Monday to Friday (about 59 million events), cores `1 2 4`, 3 repeats each.
+`CORES="1 2 4 8"` picks other core counts: each one sets the TaskManager's CPU limit, its number of
+task slots and the job's parallelism. Nothing has to be typed in while it runs. At the end it prints
+time, events/s, speedup and efficiency per core count (saved as `speedup.txt` in the run folder)
+and exits with status 1 if a run did not finish or the output differs from the reference.
 Filling the topic takes about 20 to 30 minutes, and each run takes a few minutes. Afterwards it dumps the
 4-core output and validates it against `answer_key/answer-key-week.parquet`.
 
