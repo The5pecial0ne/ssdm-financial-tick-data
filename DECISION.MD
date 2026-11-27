@@ -1,10 +1,10 @@
-#Project Decisions
+# Project Decisions
 
 29-09-2026
 
 -Using Docker for all infrastructure.
 -Using kafka for event streaming.
--Using Flink for stream proessing.
+-Using Flink for stream processing.
 
 04-10-2026
 
