@@ -36,7 +36,7 @@ ceiling = [c / b for c, b in zip(cores, src)]
 plt.rcParams.update({"font.size": 8, "font.family": "serif"})
 fig, (a, b) = plt.subplots(2, 1, figsize=(3.4, 3.6), sharex=True, gridspec_kw={"height_ratios": [1.6, 1]})
 a.plot(cores, cores, "--", color="#9ca3af", lw=1, label="linear")
-a.plot(cores, ceiling, ":", color="#b45309", lw=1.4, label="partition ceiling $p/$(source max/mean)")
+a.plot(cores, ceiling, ":", color="#b45309", lw=1.4, label="partition ceiling $c/$(source max/mean)")
 a.errorbar(cores, speed, yerr=err, color="#2563eb", marker="o", ms=3.5, lw=1.8, capsize=2, label="measured (mean of 3)")
 a.axvspan(4.5, 8.4, color="#f3f4f6", zorder=0)
 a.text(6.45, 1.0, "beyond the 4\nperformance cores", ha="center", fontsize=7, color="#6b7280")
