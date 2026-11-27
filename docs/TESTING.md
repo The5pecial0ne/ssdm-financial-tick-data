@@ -155,9 +155,9 @@ docker compose --profile demo up -d --no-build
 
 ## 3. The full week of real data
 
-1. Download the trading data from Zenodo, [record 6382482](https://doi.org/10.5281/zenodo.6382482),
-   and put the five weekday files in `data/`: `data/debs2022-gc-trading-day-08-11-21.csv` and so on,
-   up to `12-11-21` (the main README has the details). Saturday and Sunday (`13-11-21`, `14-11-21`)
+1. Download the trading data from Zenodo, [record 6382482](https://doi.org/10.5281/zenodo.6382482):
+   `python3 scripts/download_data.py` does it for you. Or put the five weekday files in `data/` by
+   hand: `data/debs2022-gc-trading-day-08-11-21.csv` and so on, up to `12-11-21` (the main README has the details). Saturday and Sunday (`13-11-21`, `14-11-21`)
    contain no trades and aren't needed. The five files take about 25 GB, and Kafka needs another
    10 GB or so inside Docker while the week is replayed.
 2. Start everything. The producer replays Monday to Friday as fast as it can:

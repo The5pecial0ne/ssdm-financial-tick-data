@@ -97,8 +97,16 @@ quick start on Windows (`.github/workflows/ci.yml`).
 
 ## Get the data
 
-Download the trading data from Zenodo, [record 6382482](https://doi.org/10.5281/zenodo.6382482)
-(CC BY-NC-SA 4.0). Put the five weekday files in `data/` with these names (about 25 GB):
+The trading data is on Zenodo, [record 6382482](https://doi.org/10.5281/zenodo.6382482)
+(CC BY-NC-SA 4.0). One command downloads the five weekday files into `data/` (about 25 GB), checks
+them against Zenodo's checksums and picks up where it stopped if interrupted:
+
+```bash
+python3 scripts/download_data.py                   # Monday to Friday
+python3 scripts/download_data.py --days 08-11-21   # only Monday, about 5 GB
+```
+
+Or download them by hand and put them in `data/` with these names:
 
 ```
 data/debs2022-gc-trading-day-08-11-21.csv   ... data/debs2022-gc-trading-day-12-11-21.csv
@@ -183,6 +191,17 @@ python -m tools.validate --flink results/week-flink.jsonl --answer-key answer_ke
 ## Experiments
 
 See [`experiments/README.md`](experiments/README.md). In short:
+
+```bash
+python3 scripts/download_data.py    # once: the data (see "Get the data")
+CORES="1 2 4 8" ./experiments/run_scalability.sh   # the scalability study, no input needed
+```
+
+`CORES` is the list of core counts to test. For each one the TaskManager is restarted with that many
+CPU cores and task slots, and the job runs with that parallelism. The script prints a table of
+processing time, events/s and speedup per core count, checks the output against the answer key, and
+exits with status 1 if a run or the check fails. Other settings (`REPEATS`, `DAYS`, `EVENTS`,
+`EXCHANGES`) are listed at the top of the script.
 
 ```bash
 ./experiments/run_scalability.sh    # 1, 2, 4 cores x 3 repeats by default; the report used CORES="1 2 3 4 5 6 7 8"
