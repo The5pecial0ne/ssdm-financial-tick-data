@@ -21,7 +21,7 @@ Quick index:
 | D8 | Placeholder trading time `01:00:00.000` is dropped | answer key v3, 5,506 trades dropped |
 | D9 | Window close = latest trade by (event time, file position) | exact match on 1,855,645 windows |
 | D10 | AggregateFunction, not a full window buffer | constant state per window |
-| D11 | Two keyBy steps: window operator, then EMA operator | job graph; EMA task 75-95% idle |
+| D11 | Two keyBy steps: window operator, then EMA operator | job graph; EMA task 77-82% idle |
 | D12 | EMA state = two doubles per symbol; empty windows don't fire | spec + answer key match |
 | D13 | First-window advisory kept, but flagged | 4,970 of 11,349 advisories are first-window |
 | D14 | Compute every symbol, publish only subscribed ones | spec 3.1 item 3 |
@@ -38,7 +38,7 @@ Quick index:
 
 ---
 
-## How the design evolved (useful for the "decisions" and "challenges" answers)
+## How the design evolved
 
 | When | What happened | Where |
 |---|---|---|
@@ -72,12 +72,12 @@ What the October prototype looked like (commit `d46892d`), and what changed sinc
 DataStream API in Java for the processing.
 
 **Alternatives.**
-- Kafka Streams (what last year's sample project used). Runs as a library inside the app, scales
+- Kafka Streams. Runs as a library inside the app, scales
   by running more instances, one per partition group. No separate cluster to run.
 - Spark Structured Streaming. Micro-batches by default; event-time windows and watermarks exist,
   but the per-window "last trade" with a tie-break and custom keyed state are less direct.
 - A single-process program (Python/pandas or C) on one machine. Simplest and probably fastest on
-  one laptop, but it doesn't show distribution or scaling, which the course grades.
+  one laptop, but it doesn't show distribution or scaling, which is what the course is about.
 
 **Trade-off notes.** Flink gives event-time windows, per-partition watermarks, side outputs for
 late data, keyed state, and operator-level parallelism and metrics through a REST API (which the
@@ -94,14 +94,14 @@ possible (`results/scalability/*/job-*.json`).
 line up with midnight (`TickParser.java`). Windows are `TumblingEventTimeWindows` of 300,000 ms.
 
 **Alternatives.**
-- Processing time (wall clock when Flink sees the event). Last year's project did a version of
-  this: its producer replaced the trade time with `Instant.now()`.
+- Processing time (wall clock when Flink sees the event), or replacing the trade time with the
+  producer's clock.
 - Ingestion time (Kafka record timestamp).
 - The other clock in the data, `Time` (when the system received the update).
 
 **Trade-off notes.** With processing time, which window a trade falls in depends on replay speed
 and scheduling, so results change between runs and can't be checked against a reference. Event
-time is deterministic but needs watermarks, which add latency (D5, timeline diagram).
+time is deterministic but needs watermarks, which add latency (D5).
 `Time` was rejected after the data exploration: it is precise only to whole seconds (99.99% end
 in `.000`) and on Monday 861 trades have it more than 60 s away from `Trading time`
 (`analysis/clocks.py`).
@@ -123,14 +123,14 @@ output topics 1 each.
 - Key by exchange: only 3 keys, so at most 3 useful partitions.
 - More partitions than cores (16, 32): a source subtask could take several and the load would
   even out; not tried.
-- A custom partitioner for hot symbols (last year's report suggests this as future work).
+- A custom partitioner for hot symbols.
 
 **Trade-off notes.** Partitions cap source parallelism, and the hash of ~5,000 symbols over 8
 partitions is not perfectly even. With 6 source subtasks and 8 partitions, two subtasks read two
 partitions each. The window operator is re-keyed by Flink's own hash on the symbol (D11), so its
 balance does not depend on Kafka's.
 
-**Evidence** (`facts/derived-facts.md`, figure `figures/subtask-load.png`):
+**Evidence** (`results/scalability/20261125-223400-cores-1-8-r3/job-c*-r1.json`, figure `report/figures/scaling.pdf`):
 - Partition sizes (8-core run, trades Mon-Fri, million): 9.34, 9.01, 5.91, 7.60, 8.21, 8.31,
   5.81, 5.21. Max/mean 1.26.
 - Source subtasks at 6 cores read 15.24, 16.61, 8.21, 8.31, 5.81, 5.21 million: subtasks 0 and 1
@@ -172,7 +172,7 @@ market time past its end have arrived on every active partition.
   (`results/ooo-sweep/20261117-230210`). The data has no disorder that matters.
 - Synthetic, 2% of trades up to 60 s late (`results/ooo-synthetic/`): wrong windows 517 / 229 /
   114 / 114 / 0 / 0 / 0 at 0 / 1 / 5 / 15 / 30 / 60 / 120 s; run time 10.5-12.0 s at every bound.
-- Latency with bound 0 (24 Nov) vs 5 s (17 Nov), see `facts/results.md`. Different days, so not a
+- Latency with bound 0 (24 Nov) vs 5 s (17 Nov), see `results/summary.md`. Different days, so not a
   clean A/B.
 
 ---
@@ -197,7 +197,7 @@ time timer that flushes windows (breaks determinism); producer heartbeats (PR #1
 
 ## D7. Classify events at the source, drop non-trades early
 
-**What we did.** `TickParser` classifies every line (diagram 03); `EventRouter` passes only trades
+**What we did.** `TickParser` classifies every line; `EventRouter` passes only trades
 and counts the rest as Flink metrics (`ticksTrade`, `ticksNonTrade`, `ticksPlaceholder`,
 `ticksMalformed`, `ticksStartOfStream`, `ticksEndOfStream`). Quotes get no event time, so they never
 move the watermark.
@@ -246,7 +246,7 @@ in state until it fires). State would grow with trades per window, and the busie
 tens of thousands of trades a day.
 
 **Evidence.** Constant state per (symbol, open window). The TaskManager container's memory peaked
-at 1.5-2.0 GB in every run (`facts/derived-facts.md`), roughly flat from 2 to 8 cores. That is the
+at 1.1-2.1 GiB across runs (`cpu-*.csv` in `results/scalability/`), roughly flat from 2 to 8 cores. That is the
 whole JVM, not just window state.
 
 ---
@@ -255,13 +255,14 @@ whole JVM, not just window state.
 
 **What we did.** `keyBy(symbol)` into the window operator, then `keyBy(symbol)` again into
 `EmaProcessor` (a `KeyedProcessFunction`). Flink runs this as three chained tasks with two hash
-shuffles (diagram 02).
+shuffles (Figure 2 in the report).
 
 **Alternative.** One `KeyedProcessFunction` with event-time timers that tracks the open window
 and the EMAs together: one shuffle fewer, more hand-written timer logic.
 
 **Evidence.** The EMA task sees 1,855,645 records against 59.4 M for the window task, and is
-75-95% idle in every run (busy 17-25%). Source+router is the busiest task: 84% busy at 8 cores.
+77-82% idle in the main run (busy 18-23%, `results/scalability/20261125-223400-cores-1-8-r3`).
+Source+router is the busiest task: 54% busy on one core and 83% on eight.
 
 ---
 
@@ -335,8 +336,7 @@ grows to the checkpoint interval for consumers reading committed data). Not meas
 times by hand and caches the date, because `DateTimeFormatter` per event is slow at hundreds of
 thousands of events per second.
 
-**Alternative.** JSON per event with Jackson (October prototype), Avro with a schema registry
-(last year's future work).
+**Alternative.** JSON per event with Jackson (October prototype), Avro with a schema registry.
 
 **Evidence.** Not benchmarked separately. Producer fills at 325k events/s; the job does 0.87M
 events/s on one core.
@@ -348,8 +348,7 @@ events/s on one core.
 **What we did.** pandas chunked reader (`tools/ticks.py`, shared with the reference so both see
 the same events), librdkafka with `linger.ms=20`, 10,000-message batches, lz4, `acks=1`.
 
-**Alternative.** kafka-python (PR #2 says about 10x slower), a JVM producer (last year: Scala with
-a synchronous `send().get()` per record).
+**Alternative.** kafka-python (PR #2 says about 10x slower), a JVM producer (Java or Scala).
 
 **Evidence.** 325k events/s for trades, 804k events/s with all events (more rows per chunk).
 
@@ -361,7 +360,7 @@ a synchronous `send().get()` per record).
 (default 200) are job options.
 
 **Evidence.** Tuned (5 / 50 ms) vs default at 4 cores: p50 93 vs 266 ms at 100k events/s. Numbers
-in `facts/results.md`. Throughput cost of the tuned settings: not measured.
+in `results/summary.md`. Throughput cost of the tuned settings: not measured.
 
 ---
 
@@ -384,8 +383,7 @@ multi-machine cluster (not available).
 `tools/validate.py` (window-by-window: missing, extra, value errors, missed / spurious /
 wrong-direction advisories). The week answer key is `answer_key/answer-key-week.parquet`.
 
-**Alternative.** Spot checks of a few symbols (what last year did, on dummy data with 1-minute
-windows).
+**Alternative.** Spot checks of a few symbols, or a test on small dummy data.
 
 **Evidence.** Every experiment run validated; CI runs the check on every push.
 
@@ -405,8 +403,8 @@ buys hidden), every subscribed symbol sorted by EMA38 distance from EMA100 as % 
 (comparable across prices), a per-symbol chart with markers, an advisory timeline. Symbols with
 fewer than 100 windows are listed as warming up.
 
-**Alternatives.** Grafana on a time-series DB (last year's future work), a custom web app with
-WebSockets (last year's approach). Streamlit was quicker and reads Kafka directly.
+**Alternatives.** Grafana on a time-series DB, or a custom web app with
+WebSockets. Streamlit was quicker and reads Kafka directly.
 
 ---
 
